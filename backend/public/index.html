@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="TraceChain product administration and QR generation portal" />
+    <title>TraceChain | Product Portal</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="/"><span class="brand-mark">⌘</span><span>TRACECHAIN</span></a>
+      <div class="secure"><span></span> Secure product portal</div>
+    </header>
+
+    <main>
+      <section id="login-view" class="login-layout">
+        <div class="hero-copy">
+          <p class="eyebrow">END-TO-END PRODUCT PROVENANCE</p>
+          <h1>Trust, built into every step.</h1>
+          <p class="lead">Generate secure product QR codes and let consumers verify the complete supply-chain journey from your mobile app.</p>
+          <div class="flow"><span>01 Create</span><i></i><span>02 Generate QR</span><i></i><span>03 Scan & verify</span></div>
+        </div>
+        <form id="login-form" class="panel login-card">
+          <p class="eyebrow">MANUFACTURER ACCESS</p>
+          <h2>Sign in to your portal</h2>
+          <p class="muted">Use your TraceChain manufacturer credentials.</p>
+          <label>Email address<input id="email" type="email" value="manufacturer@tracechain.demo" required /></label>
+          <label>Password<input id="password" type="password" value="TraceChain@123" required /></label>
+          <button type="submit">Sign in securely <span>→</span></button>
+          <p id="login-error" class="error" role="alert"></p>
+        </form>
+      </section>
+
+      <section id="dashboard-view" class="dashboard hidden">
+        <div class="page-head">
+          <div><p class="eyebrow">MANUFACTURER WORKSPACE</p><h1>Product QR Studio</h1><p class="muted">Create a traceable product, then scan its QR with the TraceChain app.</p></div>
+          <button id="logout" class="secondary">Sign out</button>
+        </div>
+
+        <div class="workspace">
+          <form id="product-form" class="panel create-card">
+            <div class="step">01</div><h2>Create product</h2>
+            <label>Product name<input id="product-name" placeholder="e.g. Organic Maize Flour" required minlength="2" /></label>
+            <label>Description<textarea id="description" placeholder="Origin, grade, packaging or other useful details" rows="4"></textarea></label>
+            <button type="submit">Generate traceable QR <span>→</span></button>
+            <p id="product-error" class="error" role="alert"></p>
+          </form>
+
+          <section id="qr-result" class="panel qr-card empty-result">
+            <div class="empty-icon">⌗</div><h2>Your QR will appear here</h2>
+            <p class="muted">Create a product to generate its unique verification code.</p>
+          </section>
+        </div>
+
+        <section class="products-section">
+          <div class="section-head"><div><p class="eyebrow">RECENT INVENTORY</p><h2>Traceable products</h2></div><span id="product-count" class="count">0 products</span></div>
+          <div id="products" class="product-grid"></div>
+        </section>
+      </section>
+    </main>
+    <div id="toast" class="toast" role="status"></div>
+    <script src="/app.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,32 @@
+# Dependencies
+**/node_modules/
+
+#Environment / secrets
+.env
+.env.*
+!.env.example
+
+# React Native / Android
+mobile/android/.gradle/
+mobile/android/build/
+mobile/android/app/build/
+mobile/android/app/.cxx/
+mobile/android/local.properties
+
+# Locally built release artifacts (attach to email or a GitHub Release)
+deliverables/*.apk
+
+# React Native / iOS
+mobile/ios/Pods/
+mobile/ios/build/
+mobile/ios/DerivedData/
+
+# Ruby / CocoaPods
+**/vendor/bundle/
+
+# IDE
+.vscode/
+
+# OS
+.DS_Store
+**/vendor/bundle/

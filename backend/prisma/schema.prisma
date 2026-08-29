@@ -1,0 +1,113 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(cuid())
+  name      String
+  email     String    @unique
+  password  String
+  role      Role
+  createdAt DateTime  @default(now())
+  products  Product[]
+  traces    Trace[]
+}
+
+model Product {
+  id String @id @default(cuid())
+
+  // Basic product information
+  productName String
+  productCode String? @unique
+  batchNumber String  @unique
+  description String?
+
+  // QR / verification
+  qrCode  String  @unique
+  qrImage String?
+
+  // Current state
+  status ProductStatus
+
+  // Supply-chain information
+  rawMaterialSource String?
+  supplier          String?
+  processingPlant   String?
+  processingDate    DateTime?
+
+  // Quality & packaging
+  qualityCheck  String?
+  packagingUnit String?
+  packagingDate DateTime?
+
+  // Logistics
+  warehouse    String?
+  distributor  String?
+  retailer     String?
+  location     String?
+  dispatchDate DateTime?
+  deliveryDate DateTime?
+
+  // Environmental information
+  temperature Float?
+
+  createdAt DateTime @default(now())
+
+  // Relationships
+  manufacturerId String
+  manufacturer   User    @relation(fields: [manufacturerId], references: [id])
+  traces         Trace[]
+}
+
+model Trace {
+  id String @id @default(cuid())
+
+  // Journey stage
+  stage String
+
+  // Location
+  location  String
+  latitude  Float?
+  longitude Float?
+
+  // Event information
+  eventDate   DateTime?
+  temperature Float?
+  remarks     String?
+
+  createdAt DateTime @default(now())
+
+  // Relationships
+  productId   String
+  updatedById String
+
+  product   Product @relation(fields: [productId], references: [id])
+  updatedBy User    @relation(fields: [updatedById], references: [id])
+}
+
+enum Role {
+  MANUFACTURER
+  SUPPLIER
+  WAREHOUSE
+  DISTRIBUTOR
+  RETAILER
+  CUSTOMER
+}
+
+enum ProductStatus {
+  CREATED
+  QUALITY_CHECK
+  MANUFACTURED
+  PACKAGED
+  WAREHOUSE
+  DISTRIBUTED
+  RETAIL
+  IN_TRANSIT
+  DELIVERED
+  SOLD
+}
