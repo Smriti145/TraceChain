@@ -26,6 +26,15 @@ mobile/ios/DerivedData/
 
 # IDE
 .vscode/
+**/.idea/
+
+# Local AI/editor metadata
+backend/.agents/
+backend/.claude/
+backend/.windsurf/
+
+# Machine-specific native configuration
+mobile/ios/.xcode.env.local
 
 # OS
 .DS_Store
