@@ -1,6 +1,6 @@
 import React from "react";
 import {SafeAreaView, ScrollView, StyleSheet, Text, TextInput, View} from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../../components/SvgIcon";
 import {Colors} from "../../theme/colors";
 
 const history = [
@@ -16,18 +16,18 @@ const ScanHistoryScreen = () => (
       <Text style={styles.eyebrow}>TRACEABILITY LOG</Text>
       <Text style={styles.heading}>Scan history</Text>
       <View style={styles.searchShell}>
-        <Ionicons name="search-outline" size={20} color={Colors.gray} />
+        <SvgIcon name="search-outline" size={20} color={Colors.gray} />
         <TextInput style={styles.searchInput} placeholder="Search product or batch" placeholderTextColor={Colors.grayLight} />
       </View>
       <View style={styles.summary}>
         <Text style={styles.summaryText}>128 scans in the last 30 days</Text>
-        <Ionicons name="calendar-outline" size={18} color={Colors.primary} />
+        <SvgIcon name="calendar-outline" size={18} color={Colors.primary} />
       </View>
       <Text style={styles.today}>RECENT</Text>
       <View style={styles.card}>
         {history.map((item, index) => (
           <View key={item.batch} style={[styles.row, index < history.length - 1 && styles.border]}>
-            <View style={styles.productIcon}><Ionicons name="cube-outline" size={21} color={Colors.primary} /></View>
+            <View style={styles.productIcon}><SvgIcon name="cube-outline" size={21} color={Colors.primary} /></View>
             <View style={styles.copy}>
               <Text style={styles.product}>{item.name}</Text>
               <Text style={styles.meta}>{item.batch} · Today, 10:30</Text>

@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../../components/SvgIcon";
 import {Colors} from "../../theme/colors";
 
 const TimelineScreen = ({ navigation, route }: any) => {
@@ -16,7 +16,7 @@ const TimelineScreen = ({ navigation, route }: any) => {
   return (
     <SafeAreaView style={styles.container}>
       <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-        <Ionicons name="arrow-back" size={22} color={Colors.black} />
+        <SvgIcon name="arrow-back" size={22} color={Colors.black} />
       </TouchableOpacity>
       <Text style={styles.eyebrow}>PROVENANCE RECORD</Text>
       <Text style={styles.heading}>Product journey</Text>

@@ -1,6 +1,6 @@
 import React from "react";
 import {SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../../components/SvgIcon";
 import {Colors} from "../../theme/colors";
 
 const InfoRow = ({label, value}: {label: string; value?: string | number | null}) => value ? (
@@ -15,10 +15,10 @@ const ProductDetailsScreen = ({navigation, route}: any) => {
     <SafeAreaView style={styles.safeArea}>
       <ScrollView contentContainerStyle={styles.container} showsVerticalScrollIndicator={false}>
         <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back" size={22} color={Colors.black} />
+          <SvgIcon name="arrow-back" size={22} color={Colors.black} />
         </TouchableOpacity>
         <View style={styles.hero}>
-          <View style={styles.verifiedIcon}><Ionicons name="shield-checkmark" size={38} color={Colors.success} /></View>
+          <View style={styles.verifiedIcon}><SvgIcon name="shield-checkmark" size={38} color={Colors.success} /></View>
           <Text style={styles.eyebrow}>AUTHENTIC PRODUCT</Text>
           <Text style={styles.title}>{product.productName}</Text>
           <Text style={styles.subtitle}>Batch {product.batchNumber}</Text>
@@ -36,9 +36,9 @@ const ProductDetailsScreen = ({navigation, route}: any) => {
           <InfoRow label="Temperature" value={product.temperature != null ? `${product.temperature} °C` : null} />
         </View>
         <TouchableOpacity style={styles.button} onPress={() => navigation.navigate("Timeline", {traces: product.traces || []})}>
-          <Ionicons name="git-branch-outline" size={20} color={Colors.white} />
+          <SvgIcon name="git-branch-outline" size={20} color={Colors.white} />
           <Text style={styles.buttonText}>View complete journey</Text>
-          <Ionicons name="arrow-forward" size={19} color={Colors.white} />
+          <SvgIcon name="arrow-forward" size={19} color={Colors.white} />
         </TouchableOpacity>
       </ScrollView>
     </SafeAreaView>

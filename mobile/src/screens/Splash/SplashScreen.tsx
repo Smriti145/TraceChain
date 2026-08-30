@@ -1,7 +1,7 @@
 import React, {useEffect} from "react";
 import {SafeAreaView, StyleSheet, Text, View} from "react-native";
 import {useNavigation} from "@react-navigation/native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../../components/SvgIcon";
 
 import {getToken} from "../../services/storage";
 import {Colors} from "../../theme/colors";
@@ -27,7 +27,7 @@ export default function SplashScreen() {
   return (
     <SafeAreaView style={styles.container}>
       <View style={styles.brandMark}>
-        <Ionicons name="git-network-outline" size={42} color={Colors.white} />
+        <SvgIcon name="git-network-outline" size={42} color={Colors.white} />
       </View>
       <Text style={styles.title}>TRACECHAIN</Text>
       <Text style={styles.subtitle}>Track every step. Trust every product.</Text>

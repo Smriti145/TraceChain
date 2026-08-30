@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../../components/SvgIcon";
 import {Colors} from "../../theme/colors";
 
 import {
@@ -35,7 +35,9 @@ const ScanQRScreen = ({ navigation }: any) => {
     setIsVerifying(true);
 
     try {
-      const response = await api.get(`/products/verify/${encodeURIComponent(value)}`);
+      const reportMatch = value.trim().match(/\/verify\/([^/?#]+)/i);
+      const qrValue = reportMatch ? decodeURIComponent(reportMatch[1]) : value.trim();
+      const response = await api.get(`/products/verify/${encodeURIComponent(qrValue)}`);
       navigation.navigate("ProductDetails", {product: response.data.product});
     } catch (error: any) {
       Alert.alert(
@@ -128,7 +130,7 @@ const ScanQRScreen = ({ navigation }: any) => {
           <TouchableOpacity
             onPress={() => navigation.goBack()}
           >
-            <Ionicons name="close" size={28} color={Colors.white} />
+            <SvgIcon name="close" size={28} color={Colors.white} />
           </TouchableOpacity>
 
           <Text style={styles.headerTitle}>

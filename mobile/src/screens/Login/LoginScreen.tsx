@@ -11,7 +11,7 @@ import {
   TextInput,
 } from "react-native";
 import {useNavigation} from "@react-navigation/native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../../components/SvgIcon";
 
 import InputField from "../../components/InputField";
 import {login} from "../../services/auth.service";
@@ -56,7 +56,7 @@ export default function LoginScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <View style={styles.content}>
           <View style={styles.brandMark}>
-            <Ionicons name="git-network-outline" size={32} color={Colors.white} />
+            <SvgIcon name="git-network-outline" size={32} color={Colors.white} />
           </View>
           <Text style={styles.brand}>TRACECHAIN</Text>
           <Text style={styles.title}>Welcome back</Text>
@@ -75,9 +75,9 @@ export default function LoginScreen() {
           />
 
           <TouchableOpacity style={styles.connectionToggle} onPress={() => setShowConnection(value => !value)}>
-            <Ionicons name="server-outline" size={16} color={Colors.primary} />
+            <SvgIcon name="server-outline" size={16} color={Colors.primary} />
             <Text style={styles.connectionToggleText}>Connection settings</Text>
-            <Ionicons name={showConnection ? "chevron-up" : "chevron-down"} size={15} color={Colors.gray} />
+            <SvgIcon name={showConnection ? "chevron-up" : "chevron-down"} size={15} color={Colors.gray} />
           </TouchableOpacity>
           {showConnection ? (
             <View style={styles.connectionPanel}>
@@ -115,12 +115,12 @@ export default function LoginScreen() {
               {isSubmitting ? "Signing in…" : "Sign in securely"}
             </Text>
             {!isSubmitting ? (
-              <Ionicons name="arrow-forward" size={19} color={Colors.white} />
+              <SvgIcon name="arrow-forward" size={19} color={Colors.white} />
             ) : null}
           </TouchableOpacity>
 
           <View style={styles.secureRow}>
-            <Ionicons name="shield-checkmark-outline" size={16} color={Colors.success} />
+            <SvgIcon name="shield-checkmark-outline" size={16} color={Colors.success} />
             <Text style={styles.secureText}>Secure, encrypted access</Text>
           </View>
         </View>

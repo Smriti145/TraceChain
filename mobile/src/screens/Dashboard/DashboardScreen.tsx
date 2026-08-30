@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../../components/SvgIcon";
 
 import {Colors} from "../../theme/colors";
 
@@ -38,19 +38,19 @@ const DashboardScreen = ({navigation}: any) => (
         <TouchableOpacity
           style={styles.iconButton}
           onPress={() => navigation.navigate("Notifications")}>
-          <Ionicons name="notifications-outline" size={22} color={Colors.black} />
+          <SvgIcon name="notifications-outline" size={22} color={Colors.black} />
           <View style={styles.notificationDot} />
         </TouchableOpacity>
       </View>
 
       <View style={styles.searchShell}>
-        <Ionicons name="search-outline" size={20} color={Colors.gray} />
+        <SvgIcon name="search-outline" size={20} color={Colors.gray} />
         <TextInput
           style={styles.searchInput}
           placeholder="Search product, batch or QR ID"
           placeholderTextColor={Colors.grayLight}
         />
-        <Ionicons name="options-outline" size={20} color={Colors.primary} />
+        <SvgIcon name="options-outline" size={20} color={Colors.primary} />
       </View>
 
       <TouchableOpacity
@@ -59,13 +59,13 @@ const DashboardScreen = ({navigation}: any) => (
         onPress={() => navigation.navigate("Scan")}>
         <View style={styles.scanDecoration} />
         <View style={styles.scanIconBox}>
-          <Ionicons name="scan" size={31} color={Colors.white} />
+          <SvgIcon name="scan" size={31} color={Colors.white} />
         </View>
         <View style={styles.scanCopy}>
           <Text style={styles.scanTitle}>Scan a product</Text>
           <Text style={styles.scanText}>Verify origin and journey instantly</Text>
         </View>
-        <Ionicons name="arrow-forward-circle" size={30} color="rgba(255,255,255,0.9)" />
+        <SvgIcon name="arrow-forward-circle" size={30} color="rgba(255,255,255,0.9)" />
       </TouchableOpacity>
 
       <Text style={styles.sectionTitle}>Today’s activity</Text>
@@ -73,7 +73,7 @@ const DashboardScreen = ({navigation}: any) => (
         {stats.map(item => (
           <View style={styles.statBox} key={item.label}>
             <View style={[styles.statIcon, {backgroundColor: item.tone}]}>
-              <Ionicons name={item.icon} size={18} color={Colors.primary} />
+              <SvgIcon name={item.icon} size={18} color={Colors.primary} />
             </View>
             <Text style={styles.number}>{item.value}</Text>
             <Text style={styles.label}>{item.label}</Text>
@@ -94,14 +94,14 @@ const DashboardScreen = ({navigation}: any) => (
             key={item.batch}
             style={[styles.productRow, index < recentScans.length - 1 && styles.rowBorder]}>
             <View style={styles.productIcon}>
-              <Ionicons name="cube-outline" size={22} color={Colors.primary} />
+              <SvgIcon name="cube-outline" size={22} color={Colors.primary} />
             </View>
             <View style={styles.productCopy}>
               <Text style={styles.productName}>{item.name}</Text>
               <Text style={styles.batch}>{item.batch} · {item.time}</Text>
             </View>
             <View style={styles.verifiedBadge}>
-              <Ionicons name="checkmark-circle" size={14} color={Colors.success} />
+              <SvgIcon name="checkmark-circle" size={14} color={Colors.success} />
               <Text style={styles.verifiedText}>Verified</Text>
             </View>
           </TouchableOpacity>

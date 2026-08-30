@@ -5,6 +5,8 @@ const productForm = document.querySelector("#product-form");
 const qrResult = document.querySelector("#qr-result");
 const productsElement = document.querySelector("#products");
 const tokenKey = "tracechain_portal_token";
+const cubeSvg = `<svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 3 8 4.5v9L12 21l-8-4.5v-9z"/><path d="m4 7.5 8 4.5 8-4.5M12 12v9"/></svg>`;
+const value = id => document.querySelector(`#${id}`).value.trim();
 
 const escapeHtml = value => String(value ?? "").replace(/[&<>'"]/g, char => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"})[char]);
 const toast = message => { const el = document.querySelector("#toast"); el.textContent = message; el.classList.add("show"); setTimeout(() => el.classList.remove("show"), 2400); };
@@ -46,10 +48,17 @@ productForm.addEventListener("submit", async event => {
   button.disabled = true;
   document.querySelector("#product-error").textContent = "";
   try {
-    const data = await request("/products", {method: "POST", body: JSON.stringify({productName: document.querySelector("#product-name").value.trim(), description: document.querySelector("#description").value.trim()})});
+    const data = await request("/products", {method: "POST", body: JSON.stringify({
+      productName: value("product-name"), productCode: value("product-code"), description: value("description"),
+      rawMaterialSource: value("raw-material-source"), supplier: value("supplier"), processingPlant: value("processing-plant"),
+      processingDate: value("processing-date"), qualityCheck: value("quality-check"), packagingUnit: value("packaging-unit"),
+      packagingDate: value("packaging-date"), warehouse: value("warehouse"), distributor: value("distributor"),
+      dispatchDate: value("dispatch-date"), retailer: value("retailer"), deliveryDate: value("delivery-date"),
+      location: value("location"), temperature: value("temperature"),
+    })});
     const product = data.product;
     qrResult.classList.remove("empty-result");
-    qrResult.innerHTML = `<p class="eyebrow">QR READY TO SCAN</p><img src="${escapeHtml(product.qrImage)}" alt="QR code for ${escapeHtml(product.productName)}"><span class="batch">${escapeHtml(product.batchNumber)}</span><h2>${escapeHtml(product.productName)}</h2><p class="qr-code">${escapeHtml(product.qrCode)}</p><a class="download" href="${escapeHtml(product.qrImage)}" download="${escapeHtml(product.batchNumber)}.png"><button type="button">Download QR</button></a>`;
+    qrResult.innerHTML = `<p class="eyebrow">QR READY TO SCAN</p><img src="${escapeHtml(product.qrImage)}" alt="QR code for ${escapeHtml(product.productName)}"><span class="batch">${escapeHtml(product.batchNumber)}</span><h2>${escapeHtml(product.productName)}</h2><a class="verification-link" href="${escapeHtml(product.verificationUrl)}" target="_blank" rel="noopener">Open web traceability report</a><a class="download" href="${escapeHtml(product.qrImage)}" download="${escapeHtml(product.batchNumber)}.png"><button type="button">Download QR</button></a>`;
     productForm.reset();
     toast("Product and QR created successfully");
     loadProducts();
@@ -61,7 +70,7 @@ async function loadProducts() {
   try {
     const products = await request("/products");
     document.querySelector("#product-count").textContent = `${products.length} product${products.length === 1 ? "" : "s"}`;
-    productsElement.innerHTML = products.slice(0, 9).map(product => `<article class="product"><div class="product-top"><div class="product-icon">◇</div><span class="status">${escapeHtml(product.status)}</span></div><h3>${escapeHtml(product.productName)}</h3><p>${escapeHtml(product.batchNumber)}</p></article>`).join("") || `<p class="muted">No products yet. Create your first traceable product above.</p>`;
+    productsElement.innerHTML = products.slice(0, 9).map(product => `<article class="product"><div class="product-top"><div class="product-icon">${cubeSvg}</div><span class="status">${escapeHtml(product.status)}</span></div><h3>${escapeHtml(product.productName)}</h3><p>${escapeHtml(product.batchNumber)}</p></article>`).join("") || `<p class="muted">No products yet. Create your first traceable product above.</p>`;
   } catch (error) {
     if (error.message.toLowerCase().includes("token")) localStorage.removeItem(tokenKey);
   }

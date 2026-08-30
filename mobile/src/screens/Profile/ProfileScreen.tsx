@@ -1,6 +1,6 @@
 import React from "react";
 import {Alert, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../../components/SvgIcon";
 
 import {removeToken} from "../../services/storage";
 import {Colors} from "../../theme/colors";
@@ -48,15 +48,15 @@ const ProfileScreen = ({navigation}: any) => {
             <TouchableOpacity
               key={item.title}
               style={[styles.menuItem, index < menuItems.length - 1 && styles.menuBorder]}>
-              <View style={styles.menuIcon}><Ionicons name={item.icon} size={19} color={Colors.primary} /></View>
+              <View style={styles.menuIcon}><SvgIcon name={item.icon} size={19} color={Colors.primary} /></View>
               <Text style={styles.menuText}>{item.title}</Text>
-              <Ionicons name="chevron-forward" size={18} color={Colors.grayLight} />
+              <SvgIcon name="chevron-forward" size={18} color={Colors.grayLight} />
             </TouchableOpacity>
           ))}
         </View>
 
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
-          <Ionicons name="log-out-outline" size={20} color={Colors.danger} />
+          <SvgIcon name="log-out-outline" size={20} color={Colors.danger} />
           <Text style={styles.logoutText}>Sign out</Text>
         </TouchableOpacity>
         <Text style={styles.version}>TraceChain · Version 1.0.0</Text>

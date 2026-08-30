@@ -1,17 +1,40 @@
 const prisma = require("../config/prisma");
 const { v4: uuidv4 } = require("uuid");
 const QRCode = require("qrcode");
+
+const optionalDate = value => value ? new Date(value) : null;
+
 // Create Product
 const createProduct = async (req, res) => {
     try {
         const {
             productName,
+            productCode,
             description,
+            rawMaterialSource,
+            supplier,
+            processingPlant,
+            processingDate,
+            qualityCheck,
+            packagingUnit,
+            packagingDate,
+            warehouse,
+            distributor,
+            retailer,
+            location,
+            dispatchDate,
+            deliveryDate,
+            temperature,
         } = req.body;
+
+        if (!productName || productName.trim().length < 2) {
+            return res.status(400).json({success: false, message: "Product name is required"});
+        }
         
         const qrValue = uuidv4();
-
-        const qrImage = await QRCode.toDataURL(qrValue);
+        const publicBaseUrl = (process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+        const verificationUrl = `${publicBaseUrl}/verify/${qrValue}`;
+        const qrImage = await QRCode.toDataURL(verificationUrl);
         
         // Today's Date
 
@@ -33,24 +56,104 @@ const createProduct = async (req, res) => {
 
         // Final Batch Number
         const batchNumber = `FD-${date}-${next}`;
+        const processingAt = optionalDate(processingDate);
+        const packagingAt = optionalDate(packagingDate);
+        const dispatchAt = optionalDate(dispatchDate);
+        const deliveryAt = optionalDate(deliveryDate);
+        const parsedTemperature = temperature !== undefined && temperature !== "" ? Number(temperature) : null;
+
+        const status = retailer ? "RETAIL"
+            : distributor ? "DISTRIBUTED"
+            : warehouse ? "WAREHOUSE"
+            : packagingUnit ? "PACKAGED"
+            : qualityCheck ? "QUALITY_CHECK"
+            : processingPlant ? "MANUFACTURED"
+            : "CREATED";
+
         const product = await prisma.product.create({
-            
-            
             data: {
-                productName,
+                productName: productName.trim(),
+                productCode: productCode?.trim() || null,
                 batchNumber,
-                description,
+                description: description?.trim() || null,
                 qrCode: qrValue,
-                qrImage: qrImage,
-                status: "CREATED",
+                qrImage,
+                status,
+                rawMaterialSource: rawMaterialSource?.trim() || null,
+                supplier: supplier?.trim() || null,
+                processingPlant: processingPlant?.trim() || null,
+                processingDate: processingAt,
+                qualityCheck: qualityCheck?.trim() || null,
+                packagingUnit: packagingUnit?.trim() || null,
+                packagingDate: packagingAt,
+                warehouse: warehouse?.trim() || null,
+                distributor: distributor?.trim() || null,
+                retailer: retailer?.trim() || null,
+                location: location?.trim() || null,
+                dispatchDate: dispatchAt,
+                deliveryDate: deliveryAt,
+                temperature: Number.isFinite(parsedTemperature) ? parsedTemperature : null,
                 manufacturerId: req.user.id,
             },
         });
 
+        const defaultLocation = location?.trim() || "Location not specified";
+        const traces = [
+            {
+                stage: "CREATED",
+                location: rawMaterialSource?.trim() || defaultLocation,
+                eventDate: processingAt || new Date(),
+                remarks: rawMaterialSource ? `Raw materials sourced from ${rawMaterialSource}` : "Product record created",
+            },
+            processingPlant && {
+                stage: "PROCESSING",
+                location: processingPlant.trim(),
+                eventDate: processingAt,
+                remarks: `Processed at ${processingPlant}`,
+            },
+            qualityCheck && {
+                stage: "QUALITY_CHECK",
+                location: processingPlant?.trim() || defaultLocation,
+                eventDate: processingAt,
+                remarks: qualityCheck.trim(),
+            },
+            packagingUnit && {
+                stage: "PACKAGED",
+                location: packagingUnit.trim(),
+                eventDate: packagingAt,
+                remarks: `Packaged by ${packagingUnit}`,
+            },
+            warehouse && {
+                stage: "WAREHOUSE",
+                location: warehouse.trim(),
+                eventDate: packagingAt,
+                remarks: `Stored at ${warehouse}`,
+            },
+            distributor && {
+                stage: "DISTRIBUTED",
+                location: distributor.trim(),
+                eventDate: dispatchAt,
+                remarks: `Dispatched through ${distributor}`,
+            },
+            retailer && {
+                stage: "RETAIL",
+                location: retailer.trim(),
+                eventDate: deliveryAt,
+                remarks: `Delivered to ${retailer}`,
+            },
+        ].filter(Boolean).map(trace => ({
+            ...trace,
+            temperature: Number.isFinite(parsedTemperature) ? parsedTemperature : null,
+            productId: product.id,
+            updatedById: req.user.id,
+        }));
+
+        await prisma.trace.createMany({data: traces});
+
         res.status(201).json({
             success:true,
             message:"Product Created Successfully",
-            product
+            product: {...product, verificationUrl},
         });
 
     } catch (err) {

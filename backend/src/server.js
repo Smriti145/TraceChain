@@ -36,6 +36,10 @@ app.get("/api/health", (req, res) => {
 
 });
 
+app.get("/verify/:qr", (req, res) => {
+    res.sendFile(path.join(__dirname, "..", "public", "verify.html"));
+});
+
 app.use((req, res) => {
     res.status(404).json({ success: false, message: "Route not found" });
 });
@@ -50,8 +54,12 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5001;
 
+if (require.main === module) {
 app.listen(PORT,()=>{
 
 console.log(`Server running on ${PORT}`);
 
 });
+}
+
+module.exports = app;

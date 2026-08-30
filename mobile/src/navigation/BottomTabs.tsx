@@ -1,7 +1,7 @@
 import React from "react";
 import {StyleSheet} from "react-native";
 import {createBottomTabNavigator} from "@react-navigation/bottom-tabs";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../components/SvgIcon";
 
 import {BottomTabParamList} from "./navigation.types";
 import {Colors} from "../theme/colors";
@@ -15,7 +15,7 @@ const Tab = createBottomTabNavigator<BottomTabParamList>();
 
 const makeTabIcon = (name: string) =>
   ({color, focused}: {color: string; focused: boolean}) => (
-    <Ionicons name={`${name}${focused ? "" : "-outline"}`} size={22} color={color} />
+    <SvgIcon name={`${name}${focused ? "" : "-outline"}`} size={22} color={color} />
   );
 
 const homeIcon = makeTabIcon("home");

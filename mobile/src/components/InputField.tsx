@@ -1,6 +1,6 @@
 import React from "react";
 import {StyleSheet, Text, TextInput, TextInputProps, View} from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "./SvgIcon";
 
 import {Colors} from "../theme/colors";
 
@@ -29,7 +29,7 @@ export default function InputField({
     <View style={styles.container}>
       {label ? <Text style={styles.label}>{label}</Text> : null}
       <View style={styles.inputShell}>
-        {icon ? <Ionicons name={icon} size={19} color={Colors.gray} /> : null}
+        {icon ? <SvgIcon name={icon} size={19} color={Colors.gray} /> : null}
         <TextInput
           placeholder={placeholder}
           placeholderTextColor={Colors.grayLight}

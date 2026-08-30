@@ -11,4 +11,4 @@ cd mobile/android
 
 Current local artifact: `TraceChain-v1.0-demo.apk`
 
-SHA-256: `652aa78459d88200fcb69b4687b276160f7dff2dc5af07095259106b3c30a16a`
+SHA-256: `26b90c68a1557c596d3a0d7d7a70155512db658d3ae32455e313e9a50bf1191c`

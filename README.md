@@ -6,7 +6,8 @@ TraceChain is a product provenance system with a manufacturer web portal, an Exp
 
 - Manufacturer login and QR generation portal
 - Unique product/batch identifiers
-- QR verification from the React Native camera
+- QR verification from the React Native camera or any phone camera/browser
+- Responsive public HTML provenance report for every newly generated QR
 - Product authenticity details and journey timeline
 - Role-based API access with JWT authentication
 - PostgreSQL storage through Prisma
@@ -52,9 +53,9 @@ Android emulators use `http://10.0.2.2:5001/api` by default. For a physical devi
 
 1. Start the API and open the web portal.
 2. Sign in as the demo manufacturer.
-3. Create a product and download or display its QR.
+3. Enter the product, origin, processing, packaging, logistics, and date details; then generate its QR.
 4. Open the mobile app and configure the server address if using a physical phone.
-5. Tap **Scan**, scan the generated QR, and view the verified product and journey.
+5. Tap **Scan**, scan the generated QR, and view the verified product and journey. Scanning the same QR with a normal phone camera opens the HTML traceability report.
 
 ## Validation
 

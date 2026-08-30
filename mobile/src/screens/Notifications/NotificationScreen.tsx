@@ -1,6 +1,6 @@
 import React from "react";
 import {SafeAreaView, ScrollView, StyleSheet, Text, View} from "react-native";
-import Ionicons from "react-native-vector-icons/Ionicons";
+import SvgIcon from "../../components/SvgIcon";
 import {Colors} from "../../theme/colors";
 
 const notifications = [
@@ -22,7 +22,7 @@ const NotificationScreen = () => (
         {notifications.map((item, index) => (
           <View key={item.title} style={[styles.row, index < notifications.length - 1 && styles.border]}>
             <View style={[styles.iconBox, {backgroundColor: item.tone}]}>
-              <Ionicons name={item.icon} size={21} color={item.color} />
+              <SvgIcon name={item.icon} size={21} color={item.color} />
             </View>
             <View style={styles.copy}>
               <Text style={styles.title}>{item.title}</Text>
