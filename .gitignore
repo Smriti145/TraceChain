@@ -13,8 +13,8 @@ mobile/android/app/build/
 mobile/android/app/.cxx/
 mobile/android/local.properties
 
-# Locally built release artifacts (attach to email or a GitHub Release)
-deliverables/*.apk
+# Local delivery files (share privately or attach to a GitHub Release)
+deliverables/
 
 # React Native / iOS
 mobile/ios/Pods/
