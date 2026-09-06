@@ -21,7 +21,8 @@
         <div class="hero-copy">
           <p class="eyebrow">END-TO-END PRODUCT PROVENANCE</p>
           <h1>Trust, built into every step.</h1>
-          <p class="lead">Generate secure product QR codes and let consumers verify the complete supply-chain journey from your mobile app.</p>
+          <p class="lead">Generate secure product QR codes and verify complete journeys across food, wellness, pharmaceuticals, textiles, electronics and more.</p>
+          <div class="industry-showcase"><span>Ayurveda</span><span>Pharma</span><span>Food</span><span>Textile</span><span>Electronics</span><span>Cosmetics</span></div>
           <div class="flow"><span>01 Create</span><i></i><span>02 Generate QR</span><i></i><span>03 Scan & verify</span></div>
         </div>
         <form id="login-form" class="panel login-card">
@@ -45,9 +46,18 @@
           <form id="product-form" class="panel create-card">
             <div class="step">01</div><h2>Create product</h2>
             <div class="field-grid">
-              <label>Product name<input id="product-name" placeholder="e.g. Organic Maize Flour" required minlength="2" /></label>
-              <label>Product ID / SKU<input id="product-code" placeholder="e.g. MAIZE-FLR-01" /></label>
-              <label>Raw material source<input id="raw-material-source" placeholder="Farm or origin" /></label>
+              <label>Product name<input id="product-name" placeholder="e.g. Herbal Oil, Medicine, Garment" required minlength="2" /></label>
+              <label>Category<input id="category" list="product-categories" placeholder="e.g. Pharmaceutical" required /></label>
+              <datalist id="product-categories"><option>Food & Beverage</option><option>Pharmaceutical</option><option>Ayurveda & Wellness</option><option>Cosmetics</option><option>Textile & Apparel</option><option>Electronics</option><option>Automotive</option><option>Industrial Goods</option><option>General</option></datalist>
+              <label>Brand<input id="brand" placeholder="Brand or organization" /></label>
+              <label>Variant / model<input id="variant" placeholder="Variant, model, grade or size" /></label>
+              <label>Product ID / SKU<input id="product-code" placeholder="Internal SKU or product ID" /></label>
+              <label>Barcode<input id="barcode" inputmode="numeric" placeholder="EAN, UPC or Code 128 value" /></label>
+              <label>Net quantity<input id="net-quantity" type="number" min="0" step="0.001" placeholder="e.g. 500" /></label>
+              <label>Unit of measure<input id="unit-of-measure" placeholder="kg, g, L, ml, unit" /></label>
+              <label>Country of origin<input id="country-of-origin" placeholder="e.g. India" /></label>
+              <label>Expiry / best-before date<input id="expiry-date" type="date" /></label>
+              <label>Material / component source<input id="raw-material-source" placeholder="Farm, mine, factory or origin" /></label>
               <label>Supplier<input id="supplier" placeholder="Supplier name" /></label>
               <label>Processing plant<input id="processing-plant" placeholder="Plant name and city" /></label>
               <label>Manufacturing date<input id="processing-date" type="date" /></label>

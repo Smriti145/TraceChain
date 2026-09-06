@@ -11,6 +11,15 @@ export const DEFAULT_BASE_URL = Platform.select({
   default: "http://localhost:5001/api",
 });
 
+export const normalizeApiBaseUrl = (value: string) => {
+  const trimmed = value.trim().replace(/\/+$/, "");
+  if (!trimmed) return "";
+  const withProtocol = /^https?:\/\//i.test(trimmed)
+    ? trimmed
+    : `http://${trimmed}`;
+  return /\/api$/i.test(withProtocol) ? withProtocol : `${withProtocol}/api`;
+};
+
 const api = axios.create({
   baseURL: DEFAULT_BASE_URL,
   timeout: 10000,

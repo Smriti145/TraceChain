@@ -1,4 +1,4 @@
-import React from "react";
+import React, {useCallback, useState} from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -8,22 +8,32 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {useFocusEffect} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
+import {CachedProduct, getCachedProducts} from "../../services/storage";
 
 import {Colors} from "../../theme/colors";
 
-const stats = [
-  {label: "Total scans", value: "128", icon: "scan-outline", tone: Colors.primarySoft},
-  {label: "Verified", value: "118", icon: "shield-checkmark-outline", tone: Colors.successSoft},
-  {label: "Attention", value: "03", icon: "alert-circle-outline", tone: Colors.warningSoft},
-];
+const categories = ["All", "Ayurveda", "Food", "Pharma", "Textile", "Electronics", "Cosmetics"];
 
-const recentScans = [
-  {name: "Maize Premium Grade", batch: "FD-20260830-0042", time: "10:32 AM"},
-  {name: "Organic Sunflower Oil", batch: "FD-20260829-0038", time: "Yesterday"},
-];
+const DashboardScreen = ({navigation}: any) => {
+  const [cachedProducts, setCachedProducts] = useState<CachedProduct[]>([]);
+  const recentScans = cachedProducts.slice(0, 3);
+  const stats = [
+    {label: "Saved scans", value: String(cachedProducts.length).padStart(2, "0"), icon: "scan-outline", tone: Colors.primarySoft},
+    {label: "Verified", value: String(cachedProducts.length).padStart(2, "0"), icon: "shield-checkmark-outline", tone: Colors.successSoft},
+    {label: "Attention", value: "00", icon: "alert-circle-outline", tone: Colors.warningSoft},
+  ];
 
-const DashboardScreen = ({navigation}: any) => (
+  useFocusEffect(useCallback(() => {
+    let active = true;
+    getCachedProducts().then(items => {
+      if (active) setCachedProducts(items);
+    });
+    return () => { active = false; };
+  }, []));
+
+  return (
   <SafeAreaView style={styles.safeArea}>
     <ScrollView
       style={styles.container}
@@ -33,7 +43,7 @@ const DashboardScreen = ({navigation}: any) => (
         <View>
           <Text style={styles.eyebrow}>SUNDAY, 30 AUGUST</Text>
           <Text style={styles.greeting}>Good morning</Text>
-          <Text style={styles.subHeading}>Here’s your traceability overview.</Text>
+          <Text style={styles.subHeading}>One platform. Every product journey.</Text>
         </View>
         <TouchableOpacity
           style={styles.iconButton}
@@ -47,7 +57,7 @@ const DashboardScreen = ({navigation}: any) => (
         <SvgIcon name="search-outline" size={20} color={Colors.gray} />
         <TextInput
           style={styles.searchInput}
-          placeholder="Search product, batch or QR ID"
+          placeholder="Search product, batch, barcode or QR"
           placeholderTextColor={Colors.grayLight}
         />
         <SvgIcon name="options-outline" size={20} color={Colors.primary} />
@@ -67,6 +77,15 @@ const DashboardScreen = ({navigation}: any) => (
         </View>
         <SvgIcon name="arrow-forward-circle" size={30} color="rgba(255,255,255,0.9)" />
       </TouchableOpacity>
+
+      <Text style={styles.sectionKicker}>TRACE ACROSS INDUSTRIES</Text>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
+        {categories.map((category, index) => (
+          <View key={category} style={[styles.categoryChip, index === 0 && styles.categoryChipActive]}>
+            <Text style={[styles.categoryText, index === 0 && styles.categoryTextActive]}>{category}</Text>
+          </View>
+        ))}
+      </ScrollView>
 
       <Text style={styles.sectionTitle}>Today’s activity</Text>
       <View style={styles.statsContainer}>
@@ -89,27 +108,34 @@ const DashboardScreen = ({navigation}: any) => (
       </View>
 
       <View style={styles.listCard}>
-        {recentScans.map((item, index) => (
+        {recentScans.length ? recentScans.map((item, index) => (
           <TouchableOpacity
-            key={item.batch}
+            key={item.product.id || item.lookupKeys[0]}
             style={[styles.productRow, index < recentScans.length - 1 && styles.rowBorder]}>
             <View style={styles.productIcon}>
               <SvgIcon name="cube-outline" size={22} color={Colors.primary} />
             </View>
             <View style={styles.productCopy}>
-              <Text style={styles.productName}>{item.name}</Text>
-              <Text style={styles.batch}>{item.batch} · {item.time}</Text>
+              <Text style={styles.productCategory}>{item.product.category || "GENERAL"}</Text>
+              <Text style={styles.productName}>{item.product.productName}</Text>
+              <Text style={styles.batch}>{item.product.batchNumber} · {new Date(item.cachedAt).toLocaleDateString()}</Text>
             </View>
             <View style={styles.verifiedBadge}>
               <SvgIcon name="checkmark-circle" size={14} color={Colors.success} />
               <Text style={styles.verifiedText}>Verified</Text>
             </View>
           </TouchableOpacity>
-        ))}
+        )) : (
+          <View style={styles.emptyHistory}>
+            <SvgIcon name="scan-outline" size={25} color={Colors.primary} />
+            <View style={styles.emptyCopy}><Text style={styles.emptyTitle}>No products scanned yet</Text><Text style={styles.emptyText}>Scan any supported product to build your traceability history.</Text></View>
+          </View>
+        )}
       </View>
     </ScrollView>
   </SafeAreaView>
-);
+  );
+};
 
 export default DashboardScreen;
 
@@ -194,6 +220,12 @@ const styles = StyleSheet.create({
   scanCopy: {flex: 1, marginLeft: 14},
   scanTitle: {color: Colors.white, fontSize: 19, fontWeight: "800"},
   scanText: {color: "rgba(255,255,255,0.72)", fontSize: 12, marginTop: 5},
+  sectionKicker: {fontSize: 9, fontWeight: "800", color: Colors.gray, letterSpacing: 1.2, marginBottom: 10},
+  categories: {gap: 8, paddingBottom: 26},
+  categoryChip: {height: 34, justifyContent: "center", paddingHorizontal: 14, borderRadius: 18, backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.border},
+  categoryChipActive: {backgroundColor: Colors.primary, borderColor: Colors.primary},
+  categoryText: {fontSize: 11, fontWeight: "700", color: Colors.gray},
+  categoryTextActive: {color: Colors.white},
   sectionTitle: {fontSize: 17, fontWeight: "700", color: Colors.black},
   statsContainer: {flexDirection: "row", gap: 10, marginTop: 13, marginBottom: 28},
   statBox: {
@@ -214,8 +246,13 @@ const styles = StyleSheet.create({
   rowBorder: {borderBottomWidth: 1, borderBottomColor: Colors.border},
   productIcon: {width: 43, height: 43, borderRadius: 13, backgroundColor: Colors.primarySoft, alignItems: "center", justifyContent: "center"},
   productCopy: {flex: 1, marginLeft: 12},
+  productCategory: {fontSize: 8, fontWeight: "800", letterSpacing: 0.8, color: Colors.primary, textTransform: "uppercase"},
   productName: {fontSize: 14, fontWeight: "700", color: Colors.black},
   batch: {fontSize: 10, color: Colors.gray, marginTop: 4},
   verifiedBadge: {flexDirection: "row", alignItems: "center", gap: 4, backgroundColor: Colors.successSoft, paddingHorizontal: 8, paddingVertical: 5, borderRadius: 20},
   verifiedText: {fontSize: 10, fontWeight: "700", color: Colors.success},
+  emptyHistory: {minHeight: 86, flexDirection: "row", alignItems: "center", paddingHorizontal: 8},
+  emptyCopy: {flex: 1, marginLeft: 12},
+  emptyTitle: {fontSize: 13, fontWeight: "800", color: Colors.black},
+  emptyText: {fontSize: 10, color: Colors.gray, lineHeight: 15, marginTop: 3},
 });

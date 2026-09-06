@@ -5,6 +5,8 @@ const router = express.Router();
 const protect = require("../middleware/auth.middleware");
 
 const authorize = require("../middleware/role.middleware");
+const validate = require("../middleware/validate.middleware");
+const {createProductSchema} = require("../validations/product.validation");
 const {
 
     createProduct,
@@ -21,7 +23,7 @@ const {
 
 } = require("../controllers/product.controller");
 
-router.post("/", protect, authorize("MANUFACTURER"),createProduct);
+router.post("/", protect, authorize("MANUFACTURER"), validate(createProductSchema), createProduct);
 
 router.get("/", protect, getProducts);
 

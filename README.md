@@ -11,7 +11,7 @@ TraceChain is a product provenance system with a manufacturer web portal, an Exp
 - Product authenticity details and journey timeline
 - Role-based API access with JWT authentication
 - PostgreSQL storage through Prisma
-- Demo maize traceability dataset
+- Multi-category demo dataset covering food, wellness, pharmaceuticals, textiles, electronics, and cosmetics
 
 ## Run locally
 
@@ -67,3 +67,23 @@ npm test -- --runInBand
 ```
 
 > The included release APK is demo-signed. Create and securely store a private release keystore before publishing to an app store.
+
+## Production direction
+
+The current codebase follows a modular-monolith path: keep the API and transactional domain together while usage patterns are still evolving, then separate services only when measured scale requires it. The first production foundation includes validated environment configuration, restricted browser CORS, security headers, structured request logs, liveness/readiness checks, graceful shutdown, atomic product creation, and collision-resistant batch identifiers.
+
+See [Production architecture](docs/PRODUCTION_ARCHITECTURE.md) for the target topology, phased roadmap, security policy, and scale milestones.
+
+Production deployments must use Prisma migrations rather than `prisma db push`:
+
+```bash
+cd backend
+npx prisma migrate deploy
+npm run check
+npm start
+```
+
+Health endpoints:
+
+- `/api/health` — process liveness
+- `/api/ready` — database readiness

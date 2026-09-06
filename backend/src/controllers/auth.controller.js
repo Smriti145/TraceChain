@@ -8,7 +8,7 @@ const register = async (req, res) => {
 
     try {
 
-        const { name, email, password, role } = req.body;
+        const { name, email, password } = req.body;
 
         const exists = await prisma.user.findUnique({
             where: { email }
@@ -32,7 +32,7 @@ const register = async (req, res) => {
 
                 password: hashedPassword,
 
-                role,
+                role: "CUSTOMER",
 
             }
 
@@ -78,29 +78,16 @@ const login = async (req, res) => {
 
         });
 
-        if (!user) {
+        // Run a hash comparison even for unknown accounts so response timing and
+        // messages do not disclose whether an email address is registered.
+        const fallbackHash = "$2b$10$CwTycUXWue0Thq9StjUM0uJ8YgFfBvMFeV5a9x9pQ5N2lE5j8K2Pi";
+        const match = await bcrypt.compare(password, user?.password || fallbackHash);
 
-            return res.status(404).json({
-
-                message: "User not found"
-
-            });
-
-        }
-
-        const match = await bcrypt.compare(
-
-            password,
-
-            user.password
-
-        );
-
-        if (!match) {
+        if (!user || !match) {
 
             return res.status(401).json({
 
-                message: "Invalid Password"
+                message: "Invalid email or password"
 
             });
 

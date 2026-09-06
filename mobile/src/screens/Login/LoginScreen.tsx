@@ -17,6 +17,8 @@ import InputField from "../../components/InputField";
 import {login} from "../../services/auth.service";
 import {saveApiBaseUrl, saveToken} from "../../services/storage";
 import {DEFAULT_BASE_URL} from "../../api/axios";
+import {normalizeApiBaseUrl} from "../../api/axios";
+import axios from "axios";
 import {Colors} from "../../theme/colors";
 
 export default function LoginScreen() {
@@ -26,6 +28,31 @@ export default function LoginScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showConnection, setShowConnection] = useState(false);
   const [serverUrl, setServerUrl] = useState(DEFAULT_BASE_URL || "");
+  const [isCheckingServer, setIsCheckingServer] = useState(false);
+
+  const handleSaveServer = async () => {
+    const normalizedUrl = normalizeApiBaseUrl(serverUrl);
+    if (!normalizedUrl) {
+      Alert.alert("Invalid address", "Enter your backend server address.");
+      return;
+    }
+
+    try {
+      setIsCheckingServer(true);
+      await axios.get(`${normalizedUrl}/health`, {timeout: 5000});
+      await saveApiBaseUrl(normalizedUrl);
+      setServerUrl(normalizedUrl);
+      setShowConnection(false);
+      Alert.alert("Server connected", "The app can reach your TraceChain backend.");
+    } catch {
+      Alert.alert(
+        "Server not reachable",
+        `Could not connect to ${normalizedUrl}. Keep the backend running and ensure both devices use the same Wi-Fi.`,
+      );
+    } finally {
+      setIsCheckingServer(false);
+    }
+  };
 
   const handleLogin = async () => {
     const normalizedEmail = email.trim().toLowerCase();
@@ -59,10 +86,13 @@ export default function LoginScreen() {
             <SvgIcon name="git-network-outline" size={32} color={Colors.white} />
           </View>
           <Text style={styles.brand}>TRACECHAIN</Text>
-          <Text style={styles.title}>Welcome back</Text>
+          <Text style={styles.title}>Trace every product.</Text>
           <Text style={styles.subtitle}>
-            Sign in to manage and verify your supply chain.
+            One trusted journey across food, wellness, pharma, textile and technology.
           </Text>
+          <View style={styles.industryRow}>
+            {["AYURVEDA", "PHARMA", "ELECTRONICS"].map(industry => <View key={industry} style={styles.industryPill}><Text style={styles.industryText}>{industry}</Text></View>)}
+          </View>
 
           <InputField
             label="Email address"
@@ -92,8 +122,8 @@ export default function LoginScreen() {
                 placeholderTextColor={Colors.grayLight}
                 style={styles.serverInput}
               />
-              <TouchableOpacity style={styles.saveServer} onPress={async () => { await saveApiBaseUrl(serverUrl.trim()); setShowConnection(false); Alert.alert("Saved", "Server address updated."); }}>
-                <Text style={styles.saveServerText}>Save server address</Text>
+              <TouchableOpacity style={styles.saveServer} onPress={handleSaveServer} disabled={isCheckingServer}>
+                <Text style={styles.saveServerText}>{isCheckingServer ? "Checking server…" : "Test & save server"}</Text>
               </TouchableOpacity>
             </View>
           ) : null}
@@ -163,11 +193,14 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     marginTop: 8,
-    marginBottom: 32,
+    marginBottom: 15,
     color: Colors.gray,
     fontSize: 15,
     lineHeight: 22,
   },
+  industryRow: {flexDirection: "row", gap: 7, marginBottom: 22},
+  industryPill: {backgroundColor: Colors.primarySoft, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 12},
+  industryText: {fontSize: 8, fontWeight: "800", letterSpacing: 0.6, color: Colors.primaryDark},
   button: {
     marginTop: 6,
     height: 58,

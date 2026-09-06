@@ -22,10 +22,19 @@ model Product {
   id String @id @default(cuid())
 
   // Basic product information
-  productName String
-  productCode String? @unique
-  batchNumber String  @unique
-  description String?
+  productName     String
+  category        String    @default("GENERAL")
+  brand           String?
+  variant         String?
+  productCode     String?   @unique
+  barcode         String?   @unique
+  batchNumber     String    @unique
+  description     String?
+  netQuantity     Decimal?  @db.Decimal(18, 3)
+  unitOfMeasure   String?
+  countryOfOrigin String?
+  expiryDate      DateTime?
+  attributes      Json?
 
   // QR / verification
   qrCode  String  @unique
@@ -57,11 +66,17 @@ model Product {
   temperature Float?
 
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   // Relationships
   manufacturerId String
   manufacturer   User    @relation(fields: [manufacturerId], references: [id])
   traces         Trace[]
+
+  @@index([category])
+  @@index([status])
+  @@index([createdAt])
+  @@index([manufacturerId, createdAt])
 }
 
 model Trace {
@@ -88,6 +103,9 @@ model Trace {
 
   product   Product @relation(fields: [productId], references: [id])
   updatedBy User    @relation(fields: [updatedById], references: [id])
+
+  @@index([productId, eventDate])
+  @@index([updatedById])
 }
 
 enum Role {
