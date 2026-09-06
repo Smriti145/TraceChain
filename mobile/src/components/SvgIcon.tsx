@@ -18,6 +18,7 @@ export default function SvgIcon({name, size = 24, color = "#17201E"}: Props) {
       case "lock-closed": return <><Rect {...common} x="5" y="10" width="14" height="11" rx="2"/><Path {...common} d="M8 10V7a4 4 0 0 1 8 0v3"/></>;
       case "git-network": case "git-branch": return <><Circle {...common} cx="6" cy="5" r="2"/><Circle {...common} cx="18" cy="8" r="2"/><Circle {...common} cx="6" cy="19" r="2"/><Path {...common} d="M6 7v10M8 11h5a5 5 0 0 0 5-5"/></>;
       case "server": return <><Rect {...common} x="3" y="4" width="18" height="6" rx="2"/><Rect {...common} x="3" y="14" width="18" height="6" rx="2"/><Circle fill={color} cx="7" cy="7" r="1"/><Circle fill={color} cx="7" cy="17" r="1"/></>;
+      case "cloud-offline": return <><Path {...common} d="M5.2 17H4a3 3 0 0 1-.7-5.9A6.5 6.5 0 0 1 14.7 6a5 5 0 0 1 5.1 7.1"/><Line {...common} x1="3" y1="3" x2="21" y2="21"/></>;
       case "chevron-up": return <Polyline {...common} points="5,15 12,8 19,15"/>;
       case "chevron-down": return <Polyline {...common} points="5,9 12,16 19,9"/>;
       case "chevron-forward": return <Polyline {...common} points="9,5 16,12 9,19"/>;

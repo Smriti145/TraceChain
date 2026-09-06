@@ -9,8 +9,17 @@ const createProduct = async (req, res) => {
     try {
         const {
             productName,
+            category,
+            brand,
+            variant,
             productCode,
+            barcode,
             description,
+            netQuantity,
+            unitOfMeasure,
+            countryOfOrigin,
+            expiryDate,
+            attributes,
             rawMaterialSource,
             supplier,
             processingPlant,
@@ -48,18 +57,14 @@ const createProduct = async (req, res) => {
 
         const date = `${year}${month}${day}`;
 
-        // Count Products
-        const totalProducts = await prisma.product.count();
-
-        // Next Number
-        const next = String(totalProducts+1).padStart(4,"0");
-
-        // Final Batch Number
-        const batchNumber = `FD-${date}-${next}`;
+        // Collision-resistant public batch identifier. Database count-based IDs
+        // race when multiple API instances create products concurrently.
+        const batchNumber = `FD-${date}-${qrValue.slice(0, 8).toUpperCase()}`;
         const processingAt = optionalDate(processingDate);
         const packagingAt = optionalDate(packagingDate);
         const dispatchAt = optionalDate(dispatchDate);
         const deliveryAt = optionalDate(deliveryDate);
+        const expiryAt = optionalDate(expiryDate);
         const parsedTemperature = temperature !== undefined && temperature !== "" ? Number(temperature) : null;
 
         const status = retailer ? "RETAIL"
@@ -70,35 +75,46 @@ const createProduct = async (req, res) => {
             : processingPlant ? "MANUFACTURED"
             : "CREATED";
 
-        const product = await prisma.product.create({
-            data: {
-                productName: productName.trim(),
-                productCode: productCode?.trim() || null,
-                batchNumber,
-                description: description?.trim() || null,
-                qrCode: qrValue,
-                qrImage,
-                status,
-                rawMaterialSource: rawMaterialSource?.trim() || null,
-                supplier: supplier?.trim() || null,
-                processingPlant: processingPlant?.trim() || null,
-                processingDate: processingAt,
-                qualityCheck: qualityCheck?.trim() || null,
-                packagingUnit: packagingUnit?.trim() || null,
-                packagingDate: packagingAt,
-                warehouse: warehouse?.trim() || null,
-                distributor: distributor?.trim() || null,
-                retailer: retailer?.trim() || null,
-                location: location?.trim() || null,
-                dispatchDate: dispatchAt,
-                deliveryDate: deliveryAt,
-                temperature: Number.isFinite(parsedTemperature) ? parsedTemperature : null,
-                manufacturerId: req.user.id,
-            },
-        });
-
         const defaultLocation = location?.trim() || "Location not specified";
-        const traces = [
+
+        const product = await prisma.$transaction(async tx => {
+            const createdProduct = await tx.product.create({
+                data: {
+                    productName: productName.trim(),
+                    category: category?.trim() || "GENERAL",
+                    brand: brand?.trim() || null,
+                    variant: variant?.trim() || null,
+                    productCode: productCode?.trim() || null,
+                    barcode: barcode?.trim() || null,
+                    batchNumber,
+                    description: description?.trim() || null,
+                    netQuantity: netQuantity !== undefined && netQuantity !== "" ? netQuantity : null,
+                    unitOfMeasure: unitOfMeasure?.trim() || null,
+                    countryOfOrigin: countryOfOrigin?.trim() || null,
+                    expiryDate: expiryAt,
+                    attributes: attributes || undefined,
+                    qrCode: qrValue,
+                    qrImage,
+                    status,
+                    rawMaterialSource: rawMaterialSource?.trim() || null,
+                    supplier: supplier?.trim() || null,
+                    processingPlant: processingPlant?.trim() || null,
+                    processingDate: processingAt,
+                    qualityCheck: qualityCheck?.trim() || null,
+                    packagingUnit: packagingUnit?.trim() || null,
+                    packagingDate: packagingAt,
+                    warehouse: warehouse?.trim() || null,
+                    distributor: distributor?.trim() || null,
+                    retailer: retailer?.trim() || null,
+                    location: location?.trim() || null,
+                    dispatchDate: dispatchAt,
+                    deliveryDate: deliveryAt,
+                    temperature: Number.isFinite(parsedTemperature) ? parsedTemperature : null,
+                    manufacturerId: req.user.id,
+                },
+            });
+
+            const traces = [
             {
                 stage: "CREATED",
                 location: rawMaterialSource?.trim() || defaultLocation,
@@ -141,14 +157,16 @@ const createProduct = async (req, res) => {
                 eventDate: deliveryAt,
                 remarks: `Delivered to ${retailer}`,
             },
-        ].filter(Boolean).map(trace => ({
-            ...trace,
-            temperature: Number.isFinite(parsedTemperature) ? parsedTemperature : null,
-            productId: product.id,
-            updatedById: req.user.id,
-        }));
+            ].filter(Boolean).map(trace => ({
+                ...trace,
+                temperature: Number.isFinite(parsedTemperature) ? parsedTemperature : null,
+                productId: createdProduct.id,
+                updatedById: req.user.id,
+            }));
 
-        await prisma.trace.createMany({data: traces});
+            await tx.trace.createMany({data: traces});
+            return createdProduct;
+        });
 
         res.status(201).json({
             success:true,
@@ -315,17 +333,31 @@ const deleteProduct = async (req, res) => {
     try {
         const qr = req.params.qr;
 
-        const product = await prisma.product.findUnique({
+        const product = await prisma.product.findFirst({
             where: {
-                qrCode: qr,
+                OR: [
+                    {qrCode: qr},
+                    {barcode: qr},
+                    {productCode: qr},
+                    {batchNumber: qr},
+                ],
             },
 
             select: {
                 id: true,
                 productName: true,
+                category: true,
+                brand: true,
+                variant: true,
                 productCode: true,
+                barcode: true,
                 batchNumber: true,
                 description: true,
+                netQuantity: true,
+                unitOfMeasure: true,
+                countryOfOrigin: true,
+                expiryDate: true,
+                attributes: true,
                 qrCode: true,
                 qrImage: true,
                 status: true,

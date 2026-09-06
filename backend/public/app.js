@@ -49,7 +49,9 @@ productForm.addEventListener("submit", async event => {
   document.querySelector("#product-error").textContent = "";
   try {
     const data = await request("/products", {method: "POST", body: JSON.stringify({
-      productName: value("product-name"), productCode: value("product-code"), description: value("description"),
+      productName: value("product-name"), category: value("category"), brand: value("brand"), variant: value("variant"),
+      productCode: value("product-code"), barcode: value("barcode"), description: value("description"),
+      netQuantity: value("net-quantity"), unitOfMeasure: value("unit-of-measure"), countryOfOrigin: value("country-of-origin"), expiryDate: value("expiry-date"),
       rawMaterialSource: value("raw-material-source"), supplier: value("supplier"), processingPlant: value("processing-plant"),
       processingDate: value("processing-date"), qualityCheck: value("quality-check"), packagingUnit: value("packaging-unit"),
       packagingDate: value("packaging-date"), warehouse: value("warehouse"), distributor: value("distributor"),
@@ -70,7 +72,7 @@ async function loadProducts() {
   try {
     const products = await request("/products");
     document.querySelector("#product-count").textContent = `${products.length} product${products.length === 1 ? "" : "s"}`;
-    productsElement.innerHTML = products.slice(0, 9).map(product => `<article class="product"><div class="product-top"><div class="product-icon">${cubeSvg}</div><span class="status">${escapeHtml(product.status)}</span></div><h3>${escapeHtml(product.productName)}</h3><p>${escapeHtml(product.batchNumber)}</p></article>`).join("") || `<p class="muted">No products yet. Create your first traceable product above.</p>`;
+    productsElement.innerHTML = products.slice(0, 9).map(product => `<article class="product"><div class="product-top"><div class="product-icon">${cubeSvg}</div><span class="status">${escapeHtml(product.status)}</span></div><span class="eyebrow">${escapeHtml(product.category || "GENERAL")}</span><h3>${escapeHtml(product.productName)}</h3><p>${escapeHtml(product.batchNumber)}</p></article>`).join("") || `<p class="muted">No products yet. Create your first traceable product above.</p>`;
   } catch (error) {
     if (error.message.toLowerCase().includes("token")) localStorage.removeItem(tokenKey);
   }

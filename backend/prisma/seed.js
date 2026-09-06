@@ -1,337 +1,112 @@
-const fs = require("fs");
-const path = require("path");
-const csv = require("csv-parser");
-const { PrismaClient } = require("@prisma/client");
+require("dotenv").config();
+const bcrypt = require("bcrypt");
+const QRCode = require("qrcode");
+const {PrismaClient} = require("@prisma/client");
 
 const prisma = new PrismaClient();
+const publicBaseUrl = (process.env.PUBLIC_BASE_URL || "http://localhost:5001").replace(/\/$/, "");
 
-const csvPath = path.join(
-  __dirname,
-  "..",
-  "data",
-  "maize_whole_journey_india.csv"
-);
+const catalog = [
+  {
+    productName: "Ashwagandha Wellness Capsules", category: "Ayurveda & Wellness", brand: "Fandoro Naturals", variant: "60 vegetarian capsules",
+    productCode: "AYU-ASH-060", barcode: "8901234500017", batchNumber: "DEMO-AYU-2026-001", qrCode: "DEMO-QR-AYURVEDA-001",
+    description: "Herbal wellness supplement with ingredient-to-retail provenance.", netQuantity: 60, unitOfMeasure: "capsules", countryOfOrigin: "India", expiryDate: "2028-06-30",
+    rawMaterialSource: "Herb growers cooperative, Neemuch, Madhya Pradesh", supplier: "MP Herbal Producers Cooperative", processingPlant: "GMP Herbal Processing Unit, Indore",
+    qualityCheck: "Identity, microbial and heavy-metal tests passed", packagingUnit: "Fandoro Wellness Packaging, Indore", warehouse: "Central Wellness Warehouse, Bhopal",
+    distributor: "National Wellness Distribution Network", retailer: "Verified Ayurveda Retail Partner", location: "Mumbai, Maharashtra", temperature: 24,
+    attributes: {certification: "GMP", form: "Capsule", allergenStatement: "See package"},
+  },
+  {
+    productName: "Cold-Pressed Mustard Oil", category: "Food & Beverage", brand: "Harvest Route", variant: "1 litre bottle",
+    productCode: "FOOD-MUST-1L", barcode: "8901234500024", batchNumber: "DEMO-FOOD-2026-001", qrCode: "DEMO-QR-FOOD-001",
+    description: "Food-grade oil traced from seed procurement through retail delivery.", netQuantity: 1, unitOfMeasure: "L", countryOfOrigin: "India", expiryDate: "2027-04-30",
+    rawMaterialSource: "Mustard farms, Bharatpur, Rajasthan", supplier: "Bharatpur Oilseed Farmer Producer Company", processingPlant: "Cold Press Facility, Jaipur",
+    qualityCheck: "FSSAI quality parameters passed", packagingUnit: "Food Safe Bottling Line, Jaipur", warehouse: "North India Food Warehouse, Gurugram",
+    distributor: "Harvest Route Foods Distribution", retailer: "Verified Grocery Partner", location: "Delhi NCR", temperature: 22,
+    attributes: {process: "Cold pressed", foodLicense: "Demo FSSAI record"},
+  },
+  {
+    productName: "Paracetamol Tablets 500 mg", category: "Pharmaceutical", brand: "MediRoute", variant: "10 tablet blister",
+    productCode: "PHARMA-PCM-500", barcode: "8901234500031", batchNumber: "DEMO-PHARMA-2026-001", qrCode: "DEMO-QR-PHARMA-001",
+    description: "Demonstration pharmaceutical batch with controlled manufacturing trail.", netQuantity: 10, unitOfMeasure: "tablets", countryOfOrigin: "India", expiryDate: "2028-02-29",
+    rawMaterialSource: "Qualified API supplier, Hyderabad", supplier: "Certified Pharma Ingredients Ltd", processingPlant: "GMP Formulation Facility, Hyderabad",
+    qualityCheck: "Assay, dissolution and stability checks passed", packagingUnit: "Validated Blister Line 04", warehouse: "Temperature-Controlled Pharma Warehouse, Pune",
+    distributor: "Licensed Medical Distributor", retailer: "Registered Pharmacy Partner", location: "Pune, Maharashtra", temperature: 21,
+    attributes: {strength: "500 mg", storage: "Store below 25°C", regulatoryClass: "Demo only"},
+  },
+  {
+    productName: "Organic Cotton Shirt", category: "Textile & Apparel", brand: "Ethical Loom", variant: "Blue / Medium",
+    productCode: "TEXT-SHIRT-BLU-M", barcode: "8901234500048", batchNumber: "DEMO-TEXTILE-2026-001", qrCode: "DEMO-QR-TEXTILE-001",
+    description: "Garment journey from certified cotton source to retail outlet.", netQuantity: 1, unitOfMeasure: "piece", countryOfOrigin: "India",
+    rawMaterialSource: "Organic cotton farms, Wardha, Maharashtra", supplier: "Wardha Organic Cotton Cooperative", processingPlant: "Spinning and Garment Unit, Ahmedabad",
+    qualityCheck: "Fabric strength, colour fastness and stitching inspection passed", packagingUnit: "Sustainable Apparel Packing Unit", warehouse: "Western Apparel Distribution Centre",
+    distributor: "Ethical Loom Retail Logistics", retailer: "Ethical Fashion Store", location: "Bengaluru, Karnataka",
+    attributes: {material: "100% organic cotton", certification: "Demo GOTS record", color: "Blue"},
+  },
+  {
+    productName: "Smart Temperature Sensor", category: "Electronics", brand: "TraceSense", variant: "TS-100 Industrial",
+    productCode: "ELEC-TS-100", barcode: "8901234500055", batchNumber: "DEMO-ELEC-2026-001", qrCode: "DEMO-QR-ELECTRONICS-001",
+    description: "Industrial IoT sensor with component and assembly provenance.", netQuantity: 1, unitOfMeasure: "unit", countryOfOrigin: "India",
+    rawMaterialSource: "Approved electronic component vendors", supplier: "TraceSense Component Network", processingPlant: "Electronics Assembly Facility, Noida",
+    qualityCheck: "Calibration, electrical safety and burn-in tests passed", packagingUnit: "ESD-Safe Packaging Line", warehouse: "Technology Fulfilment Centre, Noida",
+    distributor: "Industrial Electronics Distribution Ltd", retailer: "Authorized Industrial Reseller", location: "Chennai, Tamil Nadu",
+    attributes: {model: "TS-100", accuracy: "±0.3°C", warrantyMonths: 24},
+  },
+  {
+    productName: "Aloe Vera Face Gel", category: "Cosmetics", brand: "PureLeaf", variant: "100 ml jar",
+    productCode: "COS-ALOE-100", barcode: "8901234500062", batchNumber: "DEMO-COSMETIC-2026-001", qrCode: "DEMO-QR-COSMETICS-001",
+    description: "Cosmetic product with ingredient, quality and distribution traceability.", netQuantity: 100, unitOfMeasure: "ml", countryOfOrigin: "India", expiryDate: "2027-12-31",
+    rawMaterialSource: "Aloe cultivation cluster, Tamil Nadu", supplier: "Pure Botanical Ingredients Cooperative", processingPlant: "Cosmetic Manufacturing Facility, Chennai",
+    qualityCheck: "Microbial, stability and packaging compatibility tests passed", packagingUnit: "PureLeaf Cosmetic Packaging Unit", warehouse: "South Consumer Goods Warehouse",
+    distributor: "PureLeaf Beauty Distribution", retailer: "Verified Beauty Retail Partner", location: "Kochi, Kerala", temperature: 23,
+    attributes: {skinType: "All skin types", packaging: "Recyclable jar"},
+  },
+];
 
-function readCSV() {
-  return new Promise((resolve, reject) => {
-    const results = [];
-
-    fs.createReadStream(csvPath)
-      .pipe(csv())
-      .on("data", (row) => results.push(row))
-      .on("end", () => resolve(results))
-      .on("error", reject);
-  });
-}
-
-function parseDate(value) {
-  if (!value || value.trim() === "") {
-    return null;
-  }
-
-  return new Date(value);
-}
+const asDate = value => value ? new Date(`${value}T00:00:00.000Z`) : null;
 
 async function main() {
-  console.log("🌽 Starting Maize Dataset Import...\n");
-
-  if (!fs.existsSync(csvPath)) {
-    throw new Error(`CSV file not found at: ${csvPath}`);
-  }
-
-  const records = await readCSV();
-
-  console.log(`📄 Records found in CSV: ${records.length}\n`);
-
-  /*
-   * We need an existing User because Product.manufacturerId
-   * is required by your current database schema.
-   *
-   * We'll use the first existing user as the demo manufacturer.
-   */
-const bcrypt = require("bcrypt");
-
-let manufacturer = await prisma.user.findFirst({
-  where: {
-    role: "MANUFACTURER",
-  },
-});
-
-if (!manufacturer) {
-  const hashedPassword = await bcrypt.hash(
-    "TraceChain@123",
-    10
-  );
-
-  manufacturer = await prisma.user.create({
-    data: {
-      name: "TraceChain Demo Manufacturer",
-      email: "manufacturer@tracechain.demo",
-      password: hashedPassword,
-      role: "MANUFACTURER",
-    },
+  const password = await bcrypt.hash("TraceChain@123", 10);
+  const manufacturer = await prisma.user.upsert({
+    where: {email: "manufacturer@tracechain.demo"}, update: {},
+    create: {name: "TraceChain Demo Manufacturer", email: "manufacturer@tracechain.demo", password, role: "MANUFACTURER"},
   });
 
-  console.log("👤 Created demo manufacturer user");
-} else {
-  console.log(`👤 Using existing manufacturer: ${manufacturer.email}`);
-}
+  for (const [index, item] of catalog.entries()) {
+    const processingDate = new Date(Date.UTC(2026, 7, 1 + index * 2));
+    const packagingDate = new Date(Date.UTC(2026, 7, 2 + index * 2));
+    const dispatchDate = new Date(Date.UTC(2026, 7, 3 + index * 2));
+    const deliveryDate = new Date(Date.UTC(2026, 7, 5 + index * 2));
+    const qrImage = await QRCode.toDataURL(`${publicBaseUrl}/verify/${item.qrCode}`);
+    const data = {...item, expiryDate: asDate(item.expiryDate), processingDate, packagingDate, dispatchDate, deliveryDate, qrImage, status: "DELIVERED"};
 
-console.log();
-
-  let importedProducts = 0;
-  let importedTraces = 0;
-
-  for (const row of records) {
-    const batchId = row["Batch ID"];
-    const qrId = row["Traceability/QR ID"];
-
-    console.log(`Processing ${batchId} (${qrId})...`);
-
-    /*
-     * Determine product status from the CSV.
-     */
-    let status = "CREATED";
-
-    switch (row["Current Status"]) {
-      case "Quality Check":
-        status = "QUALITY_CHECK";
-        break;
-
-      case "In Transit":
-        status = "IN_TRANSIT";
-        break;
-
-      case "Delivered":
-        status = "DELIVERED";
-        break;
-
-      default:
-        status = "CREATED";
-    }
-
-    /*
-     * Create or update the Product.
-     */
     const product = await prisma.product.upsert({
-      where: {
-        batchNumber: batchId,
-      },
-
-      update: {
-        productName: row["Product Name"],
-        productCode: row["Product ID"],
-        qrCode: qrId,
-
-        status,
-
-        rawMaterialSource: row["Raw Material Source"],
-        supplier: row["Supplier"],
-        processingPlant: row["Processing Plant"],
-        processingDate: parseDate(row["Processing Date"]),
-
-        qualityCheck: row["Quality Check"],
-
-        packagingUnit: row["Packaging Unit"],
-        packagingDate: parseDate(row["Packaging Date"]),
-
-        warehouse: row["Warehouse"],
-        distributor: row["Distributor"],
-        retailer: row["Retailer"],
-        location: row["Location"],
-
-        dispatchDate: parseDate(row["Dispatch Date"]),
-        deliveryDate: parseDate(row["Delivery Date"]),
-
-        temperature: row["Temperature (°C)"]
-          ? Number(row["Temperature (°C)"])
-          : null,
-      },
-
-      create: {
-        productName: row["Product Name"],
-        productCode: row["Product ID"],
-        batchNumber: batchId,
-
-        description: "Maize traceability product",
-
-        qrCode: qrId,
-
-        status,
-
-        rawMaterialSource: row["Raw Material Source"],
-        supplier: row["Supplier"],
-        processingPlant: row["Processing Plant"],
-        processingDate: parseDate(row["Processing Date"]),
-
-        qualityCheck: row["Quality Check"],
-
-        packagingUnit: row["Packaging Unit"],
-        packagingDate: parseDate(row["Packaging Date"]),
-
-        warehouse: row["Warehouse"],
-        distributor: row["Distributor"],
-        retailer: row["Retailer"],
-        location: row["Location"],
-
-        dispatchDate: parseDate(row["Dispatch Date"]),
-        deliveryDate: parseDate(row["Delivery Date"]),
-
-        temperature: row["Temperature (°C)"]
-          ? Number(row["Temperature (°C)"])
-          : null,
-
-        manufacturerId: manufacturer.id,
-      },
+      where: {productCode: item.productCode}, update: data,
+      create: {...data, manufacturerId: manufacturer.id},
     });
 
-    importedProducts++;
+    const events = [
+      ["SOURCE", item.rawMaterialSource, processingDate, "Materials sourced from an approved origin"],
+      ["MANUFACTURED", item.processingPlant, processingDate, `Manufactured by ${item.processingPlant}`],
+      ["QUALITY_CHECK", item.processingPlant, processingDate, item.qualityCheck],
+      ["PACKAGED", item.packagingUnit, packagingDate, `Packaged by ${item.packagingUnit}`],
+      ["DISTRIBUTED", item.warehouse, dispatchDate, `Dispatched through ${item.distributor}`],
+      ["DELIVERED", item.location, deliveryDate, `Delivered to ${item.retailer}`],
+    ];
 
-    /*
-     * Remove previously imported traces for this product.
-     *
-     * This makes the seed script safe to run multiple times.
-     */
-    await prisma.trace.deleteMany({
-      where: {
-        productId: product.id,
-      },
-    });
-
-    /*
-     * Build the product journey.
-     */
-
-    const traces = [];
-
-    // 1. Raw Material
-    traces.push({
-      stage: "RAW_MATERIAL",
-      location: row["Raw Material Source"],
-      eventDate: parseDate(row["Processing Date"]),
-      temperature: row["Temperature (°C)"]
-        ? Number(row["Temperature (°C)"])
-        : null,
-      remarks: `Raw maize sourced from ${row["Raw Material Source"]}`,
-    });
-
-    // 2. Processing
-    traces.push({
-      stage: "PROCESSING",
-      location: row["Processing Plant"],
-      eventDate: parseDate(row["Processing Date"]),
-      temperature: row["Temperature (°C)"]
-        ? Number(row["Temperature (°C)"])
-        : null,
-      remarks: `Processed at ${row["Processing Plant"]}`,
-    });
-
-    // 3. Quality Check
-    traces.push({
-      stage: "QUALITY_CHECK",
-      location: row["Processing Plant"],
-      eventDate: parseDate(row["Processing Date"]),
-      temperature: row["Temperature (°C)"]
-        ? Number(row["Temperature (°C)"])
-        : null,
-      remarks: `Quality check status: ${row["Quality Check"]}`,
-    });
-
-    // 4. Packaging
-    traces.push({
-      stage: "PACKAGING",
-      location: row["Packaging Unit"],
-      eventDate: parseDate(row["Packaging Date"]),
-      temperature: row["Temperature (°C)"]
-        ? Number(row["Temperature (°C)"])
-        : null,
-      remarks: `Packed at ${row["Packaging Unit"]}`,
-    });
-
-    // 5. Warehouse
-    traces.push({
-      stage: "WAREHOUSE",
-      location: row["Warehouse"],
-      eventDate: parseDate(row["Packaging Date"]),
-      temperature: row["Temperature (°C)"]
-        ? Number(row["Temperature (°C)"])
-        : null,
-      remarks: `Stored at ${row["Warehouse"]}`,
-    });
-
-    // 6. Distribution
-    traces.push({
-      stage: "DISTRIBUTION",
-      location: row["Distributor"],
-      eventDate: parseDate(row["Dispatch Date"]),
-      temperature: row["Temperature (°C)"]
-        ? Number(row["Temperature (°C)"])
-        : null,
-      remarks: `Dispatched through ${row["Distributor"]}`,
-    });
-
-    // 7. Retail
-    traces.push({
-      stage: "RETAIL",
-      location: row["Retailer"],
-      eventDate: parseDate(row["Delivery Date"]),
-      temperature: row["Temperature (°C)"]
-        ? Number(row["Temperature (°C)"])
-        : null,
-      remarks: `Delivered to ${row["Retailer"]}`,
-    });
-
-    // 8. Delivery
-    if (row["Delivery Date"]) {
-      traces.push({
-        stage: "DELIVERY",
-        location: row["Location"],
-        eventDate: parseDate(row["Delivery Date"]),
-        temperature: row["Temperature (°C)"]
-          ? Number(row["Temperature (°C)"])
-          : null,
-        remarks: `Product delivered to ${row["Location"]}`,
-      });
-    }
-
-    /*
-     * Insert all journey events.
-     */
-    for (const trace of traces) {
-      await prisma.trace.create({
-        data: {
-          stage: trace.stage,
-          location: trace.location,
-          eventDate: trace.eventDate,
-          temperature: trace.temperature,
-          remarks: trace.remarks,
-
-          productId: product.id,
-          updatedById: manufacturer.id,
-        },
-      });
-
-      importedTraces++;
-    }
-
-    console.log(`   ✓ Product imported`);
-    console.log(`   ✓ ${traces.length} journey events created\n`);
+    await prisma.$transaction([
+      prisma.trace.deleteMany({where: {productId: product.id}}),
+      prisma.trace.createMany({data: events.map(([stage, eventLocation, eventDate, remarks]) => ({
+        stage, location: eventLocation, eventDate, remarks, temperature: item.temperature || null,
+        productId: product.id, updatedById: manufacturer.id,
+      }))}),
+    ]);
   }
 
-  console.log("========================================");
-  console.log("🌽 MAIZE IMPORT COMPLETED");
-  console.log("========================================");
-  console.log(`Products imported : ${importedProducts}`);
-  console.log(`Trace events      : ${importedTraces}`);
-  console.log("========================================");
+  console.log(`Seeded ${catalog.length} products across ${new Set(catalog.map(item => item.category)).size} categories.`);
 }
 
-main()
-  .catch((error) => {
-    console.error("\n❌ Import failed:");
-    console.error(error);
-    process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-  });
+main().catch(error => {
+  console.error(error);
+  process.exitCode = 1;
+}).finally(async () => prisma.$disconnect());

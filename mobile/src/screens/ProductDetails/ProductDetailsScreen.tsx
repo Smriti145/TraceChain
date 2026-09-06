@@ -9,6 +9,8 @@ const InfoRow = ({label, value}: {label: string; value?: string | number | null}
 
 const ProductDetailsScreen = ({navigation, route}: any) => {
   const product = route.params?.product;
+  const isOffline = Boolean(route.params?.isOffline);
+  const cachedAt = route.params?.cachedAt;
   if (!product) return null;
 
   return (
@@ -17,15 +19,32 @@ const ProductDetailsScreen = ({navigation, route}: any) => {
         <TouchableOpacity style={styles.back} onPress={() => navigation.goBack()}>
           <SvgIcon name="arrow-back" size={22} color={Colors.black} />
         </TouchableOpacity>
+        {isOffline ? (
+          <View style={styles.offlineBanner}>
+            <SvgIcon name="cloud-offline-outline" size={18} color={Colors.primaryDark} />
+            <View style={styles.offlineCopy}>
+              <Text style={styles.offlineTitle}>Offline saved record</Text>
+              <Text style={styles.offlineText}>Last updated {cachedAt ? new Date(cachedAt).toLocaleString() : "previously"}</Text>
+            </View>
+          </View>
+        ) : null}
         <View style={styles.hero}>
           <View style={styles.verifiedIcon}><SvgIcon name="shield-checkmark" size={38} color={Colors.success} /></View>
-          <Text style={styles.eyebrow}>AUTHENTIC PRODUCT</Text>
+          <Text style={styles.eyebrow}>{String(product.category || "GENERAL PRODUCT").toUpperCase()}</Text>
           <Text style={styles.title}>{product.productName}</Text>
           <Text style={styles.subtitle}>Batch {product.batchNumber}</Text>
           <View style={styles.badge}><View style={styles.dot} /><Text style={styles.badgeText}>Verified by TraceChain</Text></View>
         </View>
         <Text style={styles.sectionLabel}>PRODUCT DETAILS</Text>
         <View style={styles.infoContainer}>
+          <InfoRow label="Category" value={String(product.category || "General").replaceAll("_", " ")} />
+          <InfoRow label="Brand" value={product.brand} />
+          <InfoRow label="Variant / model" value={product.variant} />
+          <InfoRow label="Product code / SKU" value={product.productCode} />
+          <InfoRow label="Barcode" value={product.barcode} />
+          <InfoRow label="Net quantity" value={product.netQuantity != null ? `${product.netQuantity} ${product.unitOfMeasure || ""}`.trim() : null} />
+          <InfoRow label="Country of origin" value={product.countryOfOrigin} />
+          <InfoRow label="Expiry / best before" value={product.expiryDate ? new Date(product.expiryDate).toLocaleDateString() : null} />
           <InfoRow label="Current status" value={String(product.status).replaceAll("_", " ")} />
           <InfoRow label="Manufacturer" value={product.manufacturer?.name} />
           <InfoRow label="Supplier" value={product.supplier} />
@@ -66,4 +85,8 @@ const styles = StyleSheet.create({
   value: {fontWeight: "700", color: Colors.black, fontSize: 13, maxWidth: "58%", textAlign: "right", textTransform: "capitalize"},
   button: {height: 58, borderRadius: 15, marginTop: 22, backgroundColor: Colors.primary, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10},
   buttonText: {color: Colors.white, fontWeight: "700", fontSize: 14},
+  offlineBanner: {marginTop: 14, padding: 13, borderRadius: 14, backgroundColor: Colors.primarySoft, flexDirection: "row", alignItems: "center", gap: 10},
+  offlineCopy: {flex: 1},
+  offlineTitle: {fontSize: 12, fontWeight: "800", color: Colors.primaryDark},
+  offlineText: {fontSize: 10, color: Colors.gray, marginTop: 2},
 });

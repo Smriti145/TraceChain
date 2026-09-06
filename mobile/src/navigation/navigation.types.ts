@@ -5,7 +5,7 @@ export type RootStackParamList = {
   CreateProduct: undefined;
   AdminDashboard: undefined;
   ScanQR: undefined;
-  ProductDetails: {product: any};
+  ProductDetails: {product: any; isOffline?: boolean; cachedAt?: string};
   Timeline: {traces: any[]};
   Profile: undefined;
   Error: undefined;

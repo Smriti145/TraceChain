@@ -17,6 +17,7 @@ import {
 } from "react-native-vision-camera";
 import {CodeScanner, type Barcode} from "react-native-vision-camera-barcode-scanner";
 import api from "../../api/axios";
+import {cacheVerifiedProduct, getCachedProduct} from "../../services/storage";
 
 const ScanQRScreen = ({ navigation }: any) => {
   const [isVerifying, setIsVerifying] = useState(false);
@@ -38,12 +39,30 @@ const ScanQRScreen = ({ navigation }: any) => {
       const reportMatch = value.trim().match(/\/verify\/([^/?#]+)/i);
       const qrValue = reportMatch ? decodeURIComponent(reportMatch[1]) : value.trim();
       const response = await api.get(`/products/verify/${encodeURIComponent(qrValue)}`);
-      navigation.navigate("ProductDetails", {product: response.data.product});
+      const cached = await cacheVerifiedProduct(qrValue, response.data.product);
+      navigation.navigate("ProductDetails", {
+        product: response.data.product,
+        isOffline: false,
+        cachedAt: cached.cachedAt,
+      });
     } catch (error: any) {
-      Alert.alert(
-        "Product not verified",
-        error.response?.data?.message || "This QR code is not registered with TraceChain.",
-      );
+      const reportMatch = value.trim().match(/\/verify\/([^/?#]+)/i);
+      const lookupValue = reportMatch ? decodeURIComponent(reportMatch[1]) : value.trim();
+      const cached = !error.response ? await getCachedProduct(lookupValue) : null;
+
+      if (cached) {
+        navigation.navigate("ProductDetails", {
+          product: cached.product,
+          isOffline: true,
+          cachedAt: cached.cachedAt,
+        });
+      } else {
+        Alert.alert(
+          error.response ? "Product not verified" : "No offline record",
+          error.response?.data?.message ||
+            "The server is unavailable and this product has not been saved on this phone yet.",
+        );
+      }
     } finally {
       setIsVerifying(false);
       setTimeout(() => {
@@ -117,7 +136,7 @@ const ScanQRScreen = ({ navigation }: any) => {
       <CodeScanner
         style={StyleSheet.absoluteFill}
         isActive={true}
-        barcodeFormats={["qr-code"]}
+        barcodeFormats={["qr-code", "ean-13", "ean-8", "code-128", "upc-a", "upc-e"]}
         onBarcodeScanned={handleCodes}
         onError={error => console.error("QR scanner error", error)}
       />
@@ -149,7 +168,7 @@ const ScanQRScreen = ({ navigation }: any) => {
           </View>
 
           <Text style={styles.instruction}>
-            Position the product QR code inside the frame
+            Scan a QR or barcode from any supported product category
           </Text>
         </View>
 
@@ -160,7 +179,7 @@ const ScanQRScreen = ({ navigation }: any) => {
               <Text style={styles.bottomText}>Verifying product…</Text>
             </View>
           ) : (
-            <Text style={styles.bottomText}>Camera ready · QR codes only</Text>
+            <Text style={styles.bottomText}>Camera ready · QR and barcodes</Text>
           )}
         </View>
       </View>

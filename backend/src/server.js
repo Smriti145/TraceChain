@@ -3,21 +3,32 @@ require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
 const path = require("path");
+const {parseEnv} = require("./config/env");
+const prisma = require("./config/prisma");
+const {requestContext, securityHeaders} = require("./middleware/request.middleware");
 const authRoutes = require("./routes/auth.routes");
 const productRoutes = require("./routes/product.routes");
 const traceRoutes = require("./routes/trace.routes");
 
 
+const env = parseEnv(process.env);
 const app = express();
 
+if (env.TRUST_PROXY) app.set("trust proxy", 1);
 
-app.use(cors());
-app.use(express.json());
+app.disable("x-powered-by");
+app.use(requestContext);
+app.use(securityHeaders);
+app.use(cors({
+    origin(origin, callback) {
+        if (!origin || env.CORS_ORIGINS.includes(origin)) return callback(null, true);
+        const error = new Error("Origin not allowed by CORS");
+        error.status = 403;
+        return callback(error);
+    },
+}));
+app.use(express.json({limit: "256kb"}));
 app.use(express.static(path.join(__dirname, "..", "public")));
-app.use((req, res, next) => {
-    console.log(req.method, req.url);
-    next();
-});
 
 
 app.use("/api/auth", authRoutes);
@@ -25,15 +36,23 @@ app.use("/api/products", productRoutes);
 app.use("/api/traces", traceRoutes);
 
 app.get("/api/health", (req, res) => {
-
     res.json({
-
         success:true,
-
-        message:"Fandoro API Running"
-
+        message:"Fandoro API Running",
+        service: "tracechain-api",
+        environment: env.NODE_ENV,
+        timestamp: new Date().toISOString(),
     });
+});
 
+app.get("/api/ready", async (req, res) => {
+    try {
+        await prisma.$queryRaw`SELECT 1`;
+        res.json({success: true, database: "ready"});
+    } catch (error) {
+        console.error(JSON.stringify({level: "error", type: "readiness", requestId: req.requestId, message: error.message}));
+        res.status(503).json({success: false, database: "unavailable"});
+    }
 });
 
 app.get("/verify/:qr", (req, res) => {
@@ -44,22 +63,39 @@ app.use((req, res) => {
     res.status(404).json({ success: false, message: "Route not found" });
 });
 
-app.use((err, req, res, next) => {
-    console.error(err);
+app.use((err, req, res, _next) => {
+    console.error(JSON.stringify({
+        level: "error",
+        type: "request_error",
+        requestId: req.requestId,
+        message: err.message,
+        stack: env.NODE_ENV === "development" ? err.stack : undefined,
+    }));
     res.status(err.status || 500).json({
         success: false,
-        message: err.status ? err.message : "Internal server error",
+        message: err.status || err.message === "Origin not allowed by CORS"
+            ? err.message
+            : "Internal server error",
+        requestId: req.requestId,
     });
 });
 
-const PORT = process.env.PORT || 5001;
-
 if (require.main === module) {
-app.listen(PORT,()=>{
+    const server = app.listen(env.PORT, "0.0.0.0", () => {
+        console.log(JSON.stringify({level: "info", type: "startup", port: env.PORT, environment: env.NODE_ENV}));
+    });
 
-console.log(`Server running on ${PORT}`);
+    const shutdown = signal => {
+        console.log(JSON.stringify({level: "info", type: "shutdown", signal}));
+        server.close(async () => {
+            await prisma.$disconnect();
+            process.exit(0);
+        });
+        setTimeout(() => process.exit(1), 10000).unref();
+    };
 
-});
+    process.on("SIGTERM", () => shutdown("SIGTERM"));
+    process.on("SIGINT", () => shutdown("SIGINT"));
 }
 
 module.exports = app;

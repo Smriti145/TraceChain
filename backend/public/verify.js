@@ -12,8 +12,12 @@ async function loadReport() {
     if (!response.ok) throw new Error(data.message || "Product record not found");
     const product = data.product;
     const details = [
-      field("Product database ID", product.id), field("Product code / ID", product.productCode),
+      field("Product database ID", product.id), field("Category", humanize(product.category)),
+      field("Brand", product.brand), field("Variant / model", product.variant),
+      field("Product code / SKU", product.productCode), field("Barcode", product.barcode),
       field("Batch ID", product.batchNumber), field("Current status", humanize(product.status)),
+      field("Net quantity", product.netQuantity != null ? `${product.netQuantity} ${product.unitOfMeasure || ""}`.trim() : null),
+      field("Country of origin", product.countryOfOrigin), field("Expiry / best before", formatDate(product.expiryDate)),
       field("Description", product.description), field("Manufactured / processed", formatDate(product.processingDate)),
       field("Raw material source", product.rawMaterialSource), field("Supplier", product.supplier),
       field("Processing plant", product.processingPlant), field("Quality check", product.qualityCheck),
