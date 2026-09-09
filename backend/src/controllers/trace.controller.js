@@ -43,26 +43,45 @@ switch(req.user.role){
 
 }
 
-    const trace = await prisma.trace.create({
-      data: {
-        productId,
-        stage,
-        location,
-        latitude,
-        longitude,
-        remarks,
-        updatedById: req.user.id
-      }
-    });
+    const trace = await prisma.$transaction(async tx => {
+      const product = await tx.product.findUnique({
+        where: {id: productId},
+        select: {id: true, productName: true, batchNumber: true, manufacturerId: true},
+      });
 
-    // Update Product Status
-    await prisma.product.update({
-      where: {
-        id: productId
-      },
-      data: {
-        status: stage
+      if (!product) {
+        const error = new Error("Product not found");
+        error.status = 404;
+        throw error;
       }
+
+      const createdTrace = await tx.trace.create({
+        data: {
+          productId,
+          stage,
+          location,
+          latitude,
+          longitude,
+          remarks,
+          eventDate: new Date(),
+          updatedById: req.user.id
+        }
+      });
+
+      await tx.product.update({where: {id: productId}, data: {status: stage}});
+      await tx.notification.create({
+        data: {
+          type: "JOURNEY_UPDATED",
+          severity: "INFO",
+          title: "Batch journey updated",
+          message: `${product.productName} reached ${stage.toLowerCase().replaceAll("_", " ")} at ${location}.`,
+          metadata: {stage, location, updatedByRole: req.user.role},
+          userId: product.manufacturerId,
+          productId: product.id,
+        },
+      });
+
+      return createdTrace;
     });
 
     res.status(201).json({
@@ -75,7 +94,7 @@ switch(req.user.role){
 
     console.log(err);
 
-    res.status(500).json({
+    res.status(err.status || 500).json({
       success: false,
       message: err.message
     });

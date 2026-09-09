@@ -3,13 +3,13 @@ import {
   Alert,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
   TextInput,
 } from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 import {useNavigation} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
 

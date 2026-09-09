@@ -72,6 +72,7 @@ async function main() {
     create: {name: "TraceChain Demo Manufacturer", email: "manufacturer@tracechain.demo", password, role: "MANUFACTURER"},
   });
 
+  const seededProducts = [];
   for (const [index, item] of catalog.entries()) {
     const processingDate = new Date(Date.UTC(2026, 7, 1 + index * 2));
     const packagingDate = new Date(Date.UTC(2026, 7, 2 + index * 2));
@@ -84,6 +85,7 @@ async function main() {
       where: {productCode: item.productCode}, update: data,
       create: {...data, manufacturerId: manufacturer.id},
     });
+    seededProducts.push(product);
 
     const events = [
       ["SOURCE", item.rawMaterialSource, processingDate, "Materials sourced from an approved origin"],
@@ -103,7 +105,26 @@ async function main() {
     ]);
   }
 
-  console.log(`Seeded ${catalog.length} products across ${new Set(catalog.map(item => item.category)).size} categories.`);
+  await prisma.notification.deleteMany({where: {userId: manufacturer.id}});
+  await prisma.notification.createMany({data: [
+    {
+      type: "PRODUCT_VERIFIED", severity: "SUCCESS", title: "Product verified successfully",
+      message: `${seededProducts[0].productName} passed all traceability checks.`,
+      metadata: {status: seededProducts[0].status}, userId: manufacturer.id, productId: seededProducts[0].id,
+    },
+    {
+      type: "JOURNEY_UPDATED", severity: "INFO", title: "Batch journey updated",
+      message: `${seededProducts[1].productName} reached its latest delivery checkpoint.`,
+      metadata: {status: seededProducts[1].status}, userId: manufacturer.id, productId: seededProducts[1].id,
+    },
+    {
+      type: "QUALITY_ATTENTION", severity: "WARNING", title: "Quality review recommended",
+      message: `${seededProducts[2].productName} has a temperature-sensitive storage requirement.`,
+      metadata: {temperature: seededProducts[2].temperature}, userId: manufacturer.id, productId: seededProducts[2].id,
+    },
+  ]});
+
+  console.log(`Seeded ${catalog.length} products and 3 notifications across ${new Set(catalog.map(item => item.category)).size} categories.`);
 }
 
 main().catch(error => {

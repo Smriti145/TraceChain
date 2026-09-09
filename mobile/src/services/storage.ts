@@ -3,11 +3,29 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const TOKEN_KEY = "access_token";
 const API_URL_KEY = "api_base_url";
 const PRODUCT_CACHE_KEY = "verified_product_cache_v1";
+const NOTIFICATION_CACHE_KEY = "notification_cache_v1";
 
 export type CachedProduct = {
   lookupKeys: string[];
   product: any;
   cachedAt: string;
+};
+
+export type AppNotification = {
+  id: string;
+  type: string;
+  severity: string;
+  title: string;
+  message: string;
+  metadata?: Record<string, unknown> | null;
+  readAt?: string | null;
+  createdAt: string;
+  product?: {
+    id: string;
+    productName: string;
+    batchNumber: string;
+    category: string;
+  } | null;
 };
 
 export const saveToken = async (token: string) => {
@@ -75,4 +93,34 @@ export const getCachedProduct = async (lookupValue: string) => {
   const key = lookupValue.trim().toLowerCase();
   const cache = await readProductCache();
   return cache.find(item => item.lookupKeys.includes(key)) || null;
+};
+
+export const cacheNotifications = async (notifications: AppNotification[]) => {
+  await AsyncStorage.setItem(NOTIFICATION_CACHE_KEY, JSON.stringify(notifications.slice(0, 100)));
+};
+
+export const getCachedNotifications = async (): Promise<AppNotification[]> => {
+  const value = await AsyncStorage.getItem(NOTIFICATION_CACHE_KEY);
+  if (!value) return [];
+  try {
+    return JSON.parse(value) as AppNotification[];
+  } catch {
+    return [];
+  }
+};
+
+export const markCachedNotificationRead = async (id: string) => {
+  const notifications = await getCachedNotifications();
+  const now = new Date().toISOString();
+  const updated = notifications.map(item => item.id === id ? {...item, readAt: item.readAt || now} : item);
+  await cacheNotifications(updated);
+  return updated;
+};
+
+export const markAllCachedNotificationsRead = async () => {
+  const notifications = await getCachedNotifications();
+  const now = new Date().toISOString();
+  const updated = notifications.map(item => ({...item, readAt: item.readAt || now}));
+  await cacheNotifications(updated);
+  return updated;
 };

@@ -9,6 +9,7 @@ const {requestContext, securityHeaders} = require("./middleware/request.middlewa
 const authRoutes = require("./routes/auth.routes");
 const productRoutes = require("./routes/product.routes");
 const traceRoutes = require("./routes/trace.routes");
+const notificationRoutes = require("./routes/notification.routes");
 
 
 const env = parseEnv(process.env);
@@ -34,6 +35,7 @@ app.use(express.static(path.join(__dirname, "..", "public")));
 app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/traces", traceRoutes);
+app.use("/api/notifications", notificationRoutes);
 
 app.get("/api/health", (req, res) => {
     res.json({
