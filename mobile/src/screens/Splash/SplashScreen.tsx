@@ -4,7 +4,7 @@ import {SafeAreaView} from "react-native-safe-area-context";
 import {useNavigation} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
 
-import {getToken} from "../../services/storage";
+import {getCurrentUser, getToken, removeToken} from "../../services/storage";
 import {Colors} from "../../theme/colors";
 
 export default function SplashScreen() {
@@ -13,9 +13,11 @@ export default function SplashScreen() {
   useEffect(() => {
     let active = true;
     const restoreSession = async () => {
-      const token = await getToken();
+      const [token, user] = await Promise.all([getToken(), getCurrentUser()]);
+      const validCustomerSession = Boolean(token && user?.role === "CUSTOMER");
+      if (token && !validCustomerSession) await removeToken();
       if (active) {
-        navigation.replace(token ? "MainTabs" : "Login");
+        navigation.replace(validCustomerSession ? "MainTabs" : "Login");
       }
     };
     const timer = setTimeout(restoreSession, 800);

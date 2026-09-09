@@ -7,6 +7,14 @@ const NOTIFICATION_CACHE_KEY = "notification_cache_v1";
 const SCAN_HISTORY_KEY = "scan_audit_history_v1";
 const SCAN_QUEUE_KEY = "scan_audit_queue_v1";
 const DEVICE_ID_KEY = "scan_device_id_v1";
+const CURRENT_USER_KEY = "current_user_v1";
+
+export type AppUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: "MANUFACTURER" | "SUPPLIER" | "WAREHOUSE" | "DISTRIBUTOR" | "RETAILER" | "CUSTOMER";
+};
 
 export type CachedProduct = {
   lookupKeys: string[];
@@ -60,7 +68,18 @@ export const getToken = async () => {
 };
 
 export const removeToken = async () => {
-  await AsyncStorage.removeItem(TOKEN_KEY);
+  await Promise.all([
+    AsyncStorage.removeItem(TOKEN_KEY),
+    AsyncStorage.removeItem(CURRENT_USER_KEY),
+  ]);
+};
+
+export const saveCurrentUser = async (user: AppUser) => AsyncStorage.setItem(CURRENT_USER_KEY, JSON.stringify(user));
+
+export const getCurrentUser = async (): Promise<AppUser | null> => {
+  const value = await AsyncStorage.getItem(CURRENT_USER_KEY);
+  if (!value) return null;
+  try { return JSON.parse(value) as AppUser; } catch { return null; }
 };
 
 export const saveApiBaseUrl = async (url: string) => {

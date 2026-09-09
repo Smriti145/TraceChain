@@ -10,29 +10,36 @@ import {
 import {SafeAreaView} from "react-native-safe-area-context";
 import {useFocusEffect} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
-import {CachedProduct, getCachedProducts} from "../../services/storage";
+import {getCurrentUser, type AppUser, type ScanEvent} from "../../services/storage";
 import {loadNotifications} from "../../services/notification.service";
+import {loadScanHistory} from "../../services/scan.service";
 
 import {Colors} from "../../theme/colors";
 
 const categories = ["All", "Ayurveda", "Food", "Pharma", "Textile", "Electronics", "Cosmetics"];
 
 const DashboardScreen = ({navigation}: any) => {
-  const [cachedProducts, setCachedProducts] = useState<CachedProduct[]>([]);
+  const [scanEvents, setScanEvents] = useState<ScanEvent[]>([]);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  const recentScans = cachedProducts.slice(0, 3);
+  const recentScans = scanEvents.slice(0, 3);
+  const verifiedCount = scanEvents.filter(event => event.result === "VERIFIED").length;
+  const attentionCount = scanEvents.filter(event => event.isSuspicious).length;
   const stats = [
-    {label: "Saved scans", value: String(cachedProducts.length).padStart(2, "0"), icon: "scan-outline", tone: Colors.primarySoft},
-    {label: "Verified", value: String(cachedProducts.length).padStart(2, "0"), icon: "shield-checkmark-outline", tone: Colors.successSoft},
-    {label: "Attention", value: "00", icon: "alert-circle-outline", tone: Colors.warningSoft},
+    {label: "Audit scans", value: String(scanEvents.length).padStart(2, "0"), icon: "scan-outline", tone: Colors.primarySoft},
+    {label: "Verified", value: String(verifiedCount).padStart(2, "0"), icon: "shield-checkmark-outline", tone: Colors.successSoft},
+    {label: "Attention", value: String(attentionCount).padStart(2, "0"), icon: "alert-circle-outline", tone: Colors.warningSoft},
   ];
+  const today = new Intl.DateTimeFormat("en-IN", {weekday: "long", day: "2-digit", month: "long"}).format(new Date()).toUpperCase();
+  const role = currentUser?.role.replaceAll("_", " ") || "TRACEABILITY USER";
 
   useFocusEffect(useCallback(() => {
     let active = true;
-    Promise.all([getCachedProducts(), loadNotifications()]).then(([items, feed]) => {
+    Promise.all([loadScanHistory(), loadNotifications(), getCurrentUser()]).then(([audit, feed, user]) => {
       if (active) {
-        setCachedProducts(items);
+        setScanEvents(audit.events);
         setUnreadNotifications(feed.unreadCount);
+        setCurrentUser(user);
       }
     });
     return () => { active = false; };
@@ -46,9 +53,9 @@ const DashboardScreen = ({navigation}: any) => {
       showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <View>
-          <Text style={styles.eyebrow}>SUNDAY, 30 AUGUST</Text>
-          <Text style={styles.greeting}>Good morning</Text>
-          <Text style={styles.subHeading}>One platform. Every product journey.</Text>
+          <Text style={styles.eyebrow}>{today}</Text>
+          <Text style={styles.greeting}>Hello, {currentUser?.name?.split(" ")[0] || "there"}</Text>
+          <Text style={styles.subHeading}>{role} · One platform, every product journey.</Text>
         </View>
         <TouchableOpacity
           style={styles.iconButton}
@@ -115,19 +122,20 @@ const DashboardScreen = ({navigation}: any) => {
       <View style={styles.listCard}>
         {recentScans.length ? recentScans.map((item, index) => (
           <TouchableOpacity
-            key={item.product.id || item.lookupKeys[0]}
+            key={item.id}
+            onPress={() => item.product && navigation.navigate("ProductDetails", {product: item.product, isOffline: item.networkStatus === "OFFLINE_SYNC", cachedAt: item.scannedAt})}
             style={[styles.productRow, index < recentScans.length - 1 && styles.rowBorder]}>
-            <View style={styles.productIcon}>
-              <SvgIcon name="cube-outline" size={22} color={Colors.primary} />
+            <View style={[styles.productIcon, item.isSuspicious && {backgroundColor: Colors.warningSoft}]}>
+              <SvgIcon name={item.isSuspicious ? "warning-outline" : "cube-outline"} size={22} color={item.isSuspicious ? Colors.warning : Colors.primary} />
             </View>
             <View style={styles.productCopy}>
-              <Text style={styles.productCategory}>{item.product.category || "GENERAL"}</Text>
-              <Text style={styles.productName}>{item.product.productName}</Text>
-              <Text style={styles.batch}>{item.product.batchNumber} · {new Date(item.cachedAt).toLocaleDateString()}</Text>
+              <Text style={styles.productCategory}>{item.product?.category || "SECURITY REVIEW"}</Text>
+              <Text style={styles.productName}>{item.product?.productName || "Unrecognized product code"}</Text>
+              <Text style={styles.batch}>{item.product?.batchNumber || item.result} · {new Date(item.scannedAt).toLocaleDateString()}</Text>
             </View>
-            <View style={styles.verifiedBadge}>
-              <SvgIcon name="checkmark-circle" size={14} color={Colors.success} />
-              <Text style={styles.verifiedText}>Verified</Text>
+            <View style={[styles.verifiedBadge, item.isSuspicious && {backgroundColor: Colors.warningSoft}]}>
+              <SvgIcon name={item.isSuspicious ? "warning-outline" : "checkmark-circle"} size={14} color={item.isSuspicious ? Colors.warning : Colors.success} />
+              <Text style={[styles.verifiedText, item.isSuspicious && {color: Colors.warning}]}>{item.isSuspicious ? "Flagged" : "Verified"}</Text>
             </View>
           </TouchableOpacity>
         )) : (

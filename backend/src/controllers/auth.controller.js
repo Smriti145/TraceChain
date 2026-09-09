@@ -8,7 +8,7 @@ const register = async (req, res) => {
 
     try {
 
-        const { name, email, password } = req.body;
+        const { name, email, password, accountType } = req.body;
 
         const exists = await prisma.user.findUnique({
             where: { email }
@@ -32,7 +32,7 @@ const register = async (req, res) => {
 
                 password: hashedPassword,
 
-                role: "CUSTOMER",
+                role: accountType === "BUSINESS" ? "MANUFACTURER" : "CUSTOMER",
 
             }
 
@@ -121,10 +121,23 @@ const login = async (req, res) => {
 
 };
 
+const me = async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({where: {id: req.user.id}});
+        if (!user) return res.status(404).json({message: "Account not found"});
+        res.json({user: publicUser(user)});
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({message: "Unable to load account"});
+    }
+};
+
 module.exports = {
 
     register,
 
     login,
+
+    me,
 
 };

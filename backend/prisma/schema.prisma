@@ -167,6 +167,8 @@ enum Role {
 
 enum ProductStatus {
   CREATED
+  SOURCED
+  SUPPLIED
   QUALITY_CHECK
   MANUFACTURED
   PACKAGED

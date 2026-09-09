@@ -8,14 +8,15 @@ import {
   TouchableOpacity,
   View,
   TextInput,
+  ScrollView,
 } from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {useNavigation} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
 
 import InputField from "../../components/InputField";
-import {login} from "../../services/auth.service";
-import {saveApiBaseUrl, saveToken} from "../../services/storage";
+import {login, register} from "../../services/auth.service";
+import {saveApiBaseUrl, saveCurrentUser, saveToken} from "../../services/storage";
 import {DEFAULT_BASE_URL} from "../../api/axios";
 import {normalizeApiBaseUrl} from "../../api/axios";
 import axios from "axios";
@@ -29,6 +30,8 @@ export default function LoginScreen() {
   const [showConnection, setShowConnection] = useState(false);
   const [serverUrl, setServerUrl] = useState(DEFAULT_BASE_URL || "");
   const [isCheckingServer, setIsCheckingServer] = useState(false);
+  const [mode, setMode] = useState<"LOGIN" | "REGISTER">("LOGIN");
+  const [name, setName] = useState("");
 
   const handleSaveServer = async () => {
     const normalizedUrl = normalizeApiBaseUrl(serverUrl);
@@ -56,15 +59,22 @@ export default function LoginScreen() {
 
   const handleLogin = async () => {
     const normalizedEmail = email.trim().toLowerCase();
-    if (!normalizedEmail || !password) {
-      Alert.alert("Missing details", "Enter your email and password.");
+    if (!normalizedEmail || !password || (mode === "REGISTER" && name.trim().length < 3)) {
+      Alert.alert("Missing details", mode === "REGISTER" ? "Enter your name, email and a password of at least 12 characters." : "Enter your email and password.");
       return;
     }
 
     try {
       setIsSubmitting(true);
-      const response = await login(normalizedEmail, password);
+      const response = mode === "LOGIN"
+        ? await login(normalizedEmail, password)
+        : await register(name.trim(), normalizedEmail, password, "CUSTOMER");
+      if (response.user?.role !== "CUSTOMER") {
+        Alert.alert("Customer app only", "Use the TraceChain web portal for manufacturer and supply-chain roles.");
+        return;
+      }
       await saveToken(response.token);
+      await saveCurrentUser(response.user);
       navigation.replace("MainTabs");
     } catch (err: any) {
       Alert.alert(
@@ -81,18 +91,24 @@ export default function LoginScreen() {
       <KeyboardAvoidingView
         style={styles.keyboardView}
         behavior={Platform.OS === "ios" ? "padding" : undefined}>
-        <View style={styles.content}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
           <View style={styles.brandMark}>
             <SvgIcon name="git-network-outline" size={32} color={Colors.white} />
           </View>
           <Text style={styles.brand}>TRACECHAIN</Text>
-          <Text style={styles.title}>Trace every product.</Text>
+          <Text style={styles.title}>{mode === "LOGIN" ? "Welcome to TraceChain." : "Create your workspace."}</Text>
           <Text style={styles.subtitle}>
-            One trusted journey across food, wellness, pharma, textile and technology.
+            Scan and verify the real journey of products across every industry.
           </Text>
-          <View style={styles.industryRow}>
-            {["AYURVEDA", "PHARMA", "ELECTRONICS"].map(industry => <View key={industry} style={styles.industryPill}><Text style={styles.industryText}>{industry}</Text></View>)}
+          <View style={styles.modeSwitch}>
+            <TouchableOpacity style={[styles.modeButton, mode === "LOGIN" && styles.modeButtonActive]} onPress={() => setMode("LOGIN")}><Text style={[styles.modeText, mode === "LOGIN" && styles.modeTextActive]}>Sign in</Text></TouchableOpacity>
+            <TouchableOpacity style={[styles.modeButton, mode === "REGISTER" && styles.modeButtonActive]} onPress={() => setMode("REGISTER")}><Text style={[styles.modeText, mode === "REGISTER" && styles.modeTextActive]}>Create account</Text></TouchableOpacity>
           </View>
+
+          {mode === "LOGIN" ? <><Text style={styles.demoLabel}>CUSTOMER DEMO</Text><TouchableOpacity style={[styles.demoPill, email === "customer@tracechain.demo" && styles.demoPillActive]} onPress={() => {setEmail("customer@tracechain.demo"); setPassword("TraceChain@123");}}><Text style={[styles.demoText, email === "customer@tracechain.demo" && styles.demoTextActive]}>Use customer demo account</Text></TouchableOpacity></> : <>
+            <InputField label="Full name / organisation" placeholder="Your name or company" icon="business-outline" value={name} onChangeText={setName} />
+            <View style={styles.customerNotice}><SvgIcon name="person-outline" size={17} color={Colors.primary}/><Text style={styles.customerNoticeText}>A Customer account will be created for product verification.</Text></View>
+          </>}
 
           <InputField
             label="Email address"
@@ -142,7 +158,7 @@ export default function LoginScreen() {
             onPress={handleLogin}
             disabled={isSubmitting}>
             <Text style={styles.buttonText}>
-              {isSubmitting ? "Signing in…" : "Sign in securely"}
+              {isSubmitting ? "Please wait…" : mode === "LOGIN" ? "Sign in securely" : "Create account"}
             </Text>
             {!isSubmitting ? (
               <SvgIcon name="arrow-forward" size={19} color={Colors.white} />
@@ -153,7 +169,7 @@ export default function LoginScreen() {
             <SvgIcon name="shield-checkmark-outline" size={16} color={Colors.success} />
             <Text style={styles.secureText}>Secure, encrypted access</Text>
           </View>
-        </View>
+        </ScrollView>
         <Text style={styles.footer}>Product provenance you can trust.</Text>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -163,7 +179,7 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {flex: 1, backgroundColor: Colors.background},
   keyboardView: {flex: 1},
-  content: {flex: 1, justifyContent: "center", paddingHorizontal: 28},
+  content: {flexGrow: 1, justifyContent: "center", paddingHorizontal: 28, paddingVertical: 24},
   brandMark: {
     width: 58,
     height: 58,
@@ -198,9 +214,19 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 22,
   },
-  industryRow: {flexDirection: "row", gap: 7, marginBottom: 22},
-  industryPill: {backgroundColor: Colors.primarySoft, paddingHorizontal: 9, paddingVertical: 6, borderRadius: 12},
-  industryText: {fontSize: 8, fontWeight: "800", letterSpacing: 0.6, color: Colors.primaryDark},
+  modeSwitch: {flexDirection: "row", backgroundColor: Colors.primarySoft, padding: 4, borderRadius: 14, marginTop: 20, marginBottom: 16},
+  modeButton: {flex: 1, height: 38, alignItems: "center", justifyContent: "center", borderRadius: 11},
+  modeButtonActive: {backgroundColor: Colors.white},
+  modeText: {fontSize: 12, fontWeight: "700", color: Colors.gray},
+  modeTextActive: {color: Colors.primaryDark},
+  demoLabel: {fontSize: 9, fontWeight: "800", letterSpacing: 1.1, color: Colors.gray, marginBottom: 9},
+  demoRow: {gap: 7, paddingBottom: 15},
+  demoPill: {paddingHorizontal: 12, height: 38, justifyContent: "center", alignItems: "center", borderRadius: 16, backgroundColor: Colors.white, borderWidth: 1, borderColor: Colors.border, marginBottom: 15},
+  demoPillActive: {backgroundColor: Colors.primary, borderColor: Colors.primary},
+  demoText: {fontSize: 10, fontWeight: "700", color: Colors.gray},
+  demoTextActive: {color: Colors.white},
+  customerNotice: {flexDirection: "row", gap: 8, alignItems: "center", padding: 12, backgroundColor: Colors.primarySoft, borderRadius: 12, marginBottom: 10},
+  customerNoticeText: {flex: 1, fontSize: 11, lineHeight: 16, color: Colors.primaryDark},
   button: {
     marginTop: 6,
     height: 58,
