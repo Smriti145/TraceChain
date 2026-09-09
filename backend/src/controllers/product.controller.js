@@ -204,6 +204,8 @@ const getProducts = async (req, res) => {
 
         const products = await prisma.product.findMany({
 
+            where: req.user.role === "MANUFACTURER" ? {manufacturerId: req.user.id} : undefined,
+
             include: {
                 manufacturer: {
                     select: { id: true, name: true, email: true, role: true },
@@ -280,6 +282,9 @@ const updateProduct = async (req, res) => {
 
     try {
 
+        const ownedProduct = await prisma.product.findFirst({where: {id: req.params.id, manufacturerId: req.user.id}});
+        if (!ownedProduct) return res.status(404).json({message: "Product not found in your workspace"});
+
         const product = await prisma.product.update({
 
             where: {
@@ -311,6 +316,9 @@ const updateProduct = async (req, res) => {
 const deleteProduct = async (req, res) => {
 
     try {
+
+        const ownedProduct = await prisma.product.findFirst({where: {id: req.params.id, manufacturerId: req.user.id}});
+        if (!ownedProduct) return res.status(404).json({message: "Product not found in your workspace"});
 
         await prisma.product.delete({
 

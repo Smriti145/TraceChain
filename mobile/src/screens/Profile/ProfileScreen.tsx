@@ -1,9 +1,10 @@
-import React from "react";
+import React, {useCallback, useState} from "react";
 import {Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
+import {useFocusEffect} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
 
-import {removeToken} from "../../services/storage";
+import {getCurrentUser, removeToken, type AppUser} from "../../services/storage";
 import {Colors} from "../../theme/colors";
 
 const menuItems = [
@@ -14,6 +15,10 @@ const menuItems = [
 ];
 
 const ProfileScreen = ({navigation}: any) => {
+  const [user, setUser] = useState<AppUser | null>(null);
+  useFocusEffect(useCallback(() => { getCurrentUser().then(setUser); }, []));
+  const initials = user?.name.split(" ").filter(Boolean).slice(0, 2).map(part => part[0]).join("").toUpperCase() || "TC";
+  const roleLabel = user?.role.replaceAll("_", " ").toLowerCase().replace(/^./, value => value.toUpperCase()) || "Operator";
   const logout = () => {
     Alert.alert("Sign out", "Are you sure you want to sign out?", [
       {text: "Cancel", style: "cancel"},
@@ -35,10 +40,10 @@ const ProfileScreen = ({navigation}: any) => {
         <Text style={styles.heading}>Profile</Text>
 
         <View style={styles.profileCard}>
-          <View style={styles.avatar}><Text style={styles.avatarText}>TC</Text></View>
+          <View style={styles.avatar}><Text style={styles.avatarText}>{initials}</Text></View>
           <View style={styles.profileCopy}>
-            <Text style={styles.name}>TraceChain Operator</Text>
-            <Text style={styles.role}>Manufacturer workspace</Text>
+            <Text style={styles.name}>{user?.name || "TraceChain Operator"}</Text>
+            <Text style={styles.role}>{roleLabel} workspace · {user?.email || "Authenticated account"}</Text>
             <View style={styles.activeBadge}><View style={styles.activeDot} /><Text style={styles.activeText}>Active account</Text></View>
           </View>
         </View>

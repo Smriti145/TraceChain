@@ -73,6 +73,21 @@ async function main() {
     create: {name: "TraceChain Demo Manufacturer", email: "manufacturer@tracechain.demo", password, role: "MANUFACTURER"},
   });
 
+  const demoAccounts = [
+    ["TraceChain Supplier", "supplier@tracechain.demo", "SUPPLIER"],
+    ["TraceChain Warehouse Operator", "warehouse@tracechain.demo", "WAREHOUSE"],
+    ["TraceChain Distributor", "distributor@tracechain.demo", "DISTRIBUTOR"],
+    ["TraceChain Retailer", "retailer@tracechain.demo", "RETAILER"],
+    ["TraceChain Customer", "customer@tracechain.demo", "CUSTOMER"],
+  ];
+  for (const [name, email, role] of demoAccounts) {
+    await prisma.user.upsert({
+      where: {email},
+      update: {name, password, role},
+      create: {name, email, password, role},
+    });
+  }
+
   const seededProducts = [];
   for (const [index, item] of catalog.entries()) {
     const processingDate = new Date(Date.UTC(2026, 7, 1 + index * 2));
@@ -148,7 +163,7 @@ async function main() {
     },
   ]});
 
-  console.log(`Seeded ${catalog.length} products, 3 scan events and 4 notifications across ${new Set(catalog.map(item => item.category)).size} categories.`);
+  console.log(`Seeded 6 role accounts, ${catalog.length} products, 3 scan events and 4 notifications across ${new Set(catalog.map(item => item.category)).size} categories.`);
 }
 
 main().catch(error => {

@@ -11,3 +11,13 @@ export const login = async (
 
   return response.data;
 };
+
+export const register = async (name: string, email: string, password: string, accountType: "CUSTOMER" | "BUSINESS") => {
+  const response = await api.post("/auth/register", {name, email, password, accountType});
+  return response.data;
+};
+
+export const getMyAccount = async () => {
+  const response = await api.get("/auth/me");
+  return response.data.user;
+};
