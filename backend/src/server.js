@@ -10,6 +10,7 @@ const authRoutes = require("./routes/auth.routes");
 const productRoutes = require("./routes/product.routes");
 const traceRoutes = require("./routes/trace.routes");
 const notificationRoutes = require("./routes/notification.routes");
+const scanRoutes = require("./routes/scan.routes");
 
 
 const env = parseEnv(process.env);
@@ -36,6 +37,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/products", productRoutes);
 app.use("/api/traces", traceRoutes);
 app.use("/api/notifications", notificationRoutes);
+app.use("/api/scans", scanRoutes);
 
 app.get("/api/health", (req, res) => {
     res.json({

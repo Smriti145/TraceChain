@@ -16,8 +16,8 @@ import {
   useCameraPermission,
 } from "react-native-vision-camera";
 import {CodeScanner, type Barcode} from "react-native-vision-camera-barcode-scanner";
-import api from "../../api/axios";
 import {cacheVerifiedProduct, getCachedProduct} from "../../services/storage";
+import {extractLookupValue, saveOfflineScan, verifyAndAuditScan} from "../../services/scan.service";
 
 const ScanQRScreen = ({ navigation }: any) => {
   const [isVerifying, setIsVerifying] = useState(false);
@@ -36,21 +36,21 @@ const ScanQRScreen = ({ navigation }: any) => {
     setIsVerifying(true);
 
     try {
-      const reportMatch = value.trim().match(/\/verify\/([^/?#]+)/i);
-      const qrValue = reportMatch ? decodeURIComponent(reportMatch[1]) : value.trim();
-      const response = await api.get(`/products/verify/${encodeURIComponent(qrValue)}`);
-      const cached = await cacheVerifiedProduct(qrValue, response.data.product);
+      const qrValue = extractLookupValue(value);
+      const {product, scanEvent} = await verifyAndAuditScan(qrValue);
+      const cached = await cacheVerifiedProduct(qrValue, product);
       navigation.navigate("ProductDetails", {
-        product: response.data.product,
+        product,
         isOffline: false,
         cachedAt: cached.cachedAt,
+        scanWarning: scanEvent.isSuspicious ? scanEvent.suspiciousReason : undefined,
       });
     } catch (error: any) {
-      const reportMatch = value.trim().match(/\/verify\/([^/?#]+)/i);
-      const lookupValue = reportMatch ? decodeURIComponent(reportMatch[1]) : value.trim();
+      const lookupValue = extractLookupValue(value);
       const cached = !error.response ? await getCachedProduct(lookupValue) : null;
 
       if (cached) {
+        await saveOfflineScan(lookupValue, cached.product);
         navigation.navigate("ProductDetails", {
           product: cached.product,
           isOffline: true,

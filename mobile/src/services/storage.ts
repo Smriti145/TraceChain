@@ -4,6 +4,9 @@ const TOKEN_KEY = "access_token";
 const API_URL_KEY = "api_base_url";
 const PRODUCT_CACHE_KEY = "verified_product_cache_v1";
 const NOTIFICATION_CACHE_KEY = "notification_cache_v1";
+const SCAN_HISTORY_KEY = "scan_audit_history_v1";
+const SCAN_QUEUE_KEY = "scan_audit_queue_v1";
+const DEVICE_ID_KEY = "scan_device_id_v1";
 
 export type CachedProduct = {
   lookupKeys: string[];
@@ -26,6 +29,26 @@ export type AppNotification = {
     batchNumber: string;
     category: string;
   } | null;
+};
+
+export type ScanEvent = {
+  id: string;
+  clientEventId?: string | null;
+  result: "VERIFIED" | "NOT_FOUND";
+  isSuspicious: boolean;
+  suspiciousReason?: string | null;
+  networkStatus: "ONLINE" | "OFFLINE_SYNC";
+  scannedAt: string;
+  createdAt?: string;
+  product?: any | null;
+};
+
+export type QueuedScan = {
+  value: string;
+  clientEventId: string;
+  deviceId: string;
+  networkStatus: "OFFLINE_SYNC";
+  scannedAt: string;
 };
 
 export const saveToken = async (token: string) => {
@@ -123,4 +146,47 @@ export const markAllCachedNotificationsRead = async () => {
   const updated = notifications.map(item => ({...item, readAt: item.readAt || now}));
   await cacheNotifications(updated);
   return updated;
+};
+
+const readJsonArray = async <T>(key: string): Promise<T[]> => {
+  const value = await AsyncStorage.getItem(key);
+  if (!value) return [];
+  try { return JSON.parse(value) as T[]; } catch { return []; }
+};
+
+export const getDeviceId = async () => {
+  const existing = await AsyncStorage.getItem(DEVICE_ID_KEY);
+  if (existing) return existing;
+  const created = `tracechain-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+  await AsyncStorage.setItem(DEVICE_ID_KEY, created);
+  return created;
+};
+
+export const getCachedScanEvents = async () => readJsonArray<ScanEvent>(SCAN_HISTORY_KEY);
+
+export const cacheScanEvents = async (events: ScanEvent[]) => {
+  const unique = new Map(events.map(event => [event.clientEventId || event.id, event]));
+  const ordered = [...unique.values()]
+    .sort((a, b) => new Date(b.scannedAt).getTime() - new Date(a.scannedAt).getTime())
+    .slice(0, 100);
+  await AsyncStorage.setItem(SCAN_HISTORY_KEY, JSON.stringify(ordered));
+  return ordered;
+};
+
+export const cacheScanEvent = async (event: ScanEvent) => {
+  const current = await getCachedScanEvents();
+  return cacheScanEvents([event, ...current]);
+};
+
+export const getQueuedScans = async () => readJsonArray<QueuedScan>(SCAN_QUEUE_KEY);
+
+export const queueScan = async (scan: QueuedScan) => {
+  const current = await getQueuedScans();
+  if (!current.some(item => item.clientEventId === scan.clientEventId)) current.push(scan);
+  await AsyncStorage.setItem(SCAN_QUEUE_KEY, JSON.stringify(current.slice(-100)));
+};
+
+export const removeQueuedScan = async (clientEventId: string) => {
+  const current = await getQueuedScans();
+  await AsyncStorage.setItem(SCAN_QUEUE_KEY, JSON.stringify(current.filter(item => item.clientEventId !== clientEventId)));
 };
