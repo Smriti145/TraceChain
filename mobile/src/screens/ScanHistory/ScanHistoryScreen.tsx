@@ -1,5 +1,6 @@
 import React, {useCallback, useMemo, useState} from "react";
-import {SafeAreaView, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View} from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 import {useFocusEffect} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
 import {Colors} from "../../theme/colors";

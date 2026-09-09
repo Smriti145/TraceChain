@@ -16,6 +16,7 @@ model User {
   createdAt DateTime  @default(now())
   products  Product[]
   traces    Trace[]
+  notifications Notification[]
 }
 
 model Product {
@@ -72,6 +73,7 @@ model Product {
   manufacturerId String
   manufacturer   User    @relation(fields: [manufacturerId], references: [id])
   traces         Trace[]
+  notifications Notification[]
 
   @@index([category])
   @@index([status])
@@ -106,6 +108,26 @@ model Trace {
 
   @@index([productId, eventDate])
   @@index([updatedById])
+}
+
+model Notification {
+  id        String   @id @default(cuid())
+  type      String
+  severity  String   @default("INFO")
+  title     String
+  message   String
+  metadata  Json?
+  readAt    DateTime?
+  createdAt DateTime @default(now())
+
+  userId    String
+  productId String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
+  @@index([userId, readAt])
+  @@index([productId])
 }
 
 enum Role {

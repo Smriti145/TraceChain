@@ -1,6 +1,5 @@
 import React, {useCallback, useState} from "react";
 import {
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   Text,
@@ -8,9 +7,11 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 import {useFocusEffect} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
 import {CachedProduct, getCachedProducts} from "../../services/storage";
+import {loadNotifications} from "../../services/notification.service";
 
 import {Colors} from "../../theme/colors";
 
@@ -18,6 +19,7 @@ const categories = ["All", "Ayurveda", "Food", "Pharma", "Textile", "Electronics
 
 const DashboardScreen = ({navigation}: any) => {
   const [cachedProducts, setCachedProducts] = useState<CachedProduct[]>([]);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const recentScans = cachedProducts.slice(0, 3);
   const stats = [
     {label: "Saved scans", value: String(cachedProducts.length).padStart(2, "0"), icon: "scan-outline", tone: Colors.primarySoft},
@@ -27,8 +29,11 @@ const DashboardScreen = ({navigation}: any) => {
 
   useFocusEffect(useCallback(() => {
     let active = true;
-    getCachedProducts().then(items => {
-      if (active) setCachedProducts(items);
+    Promise.all([getCachedProducts(), loadNotifications()]).then(([items, feed]) => {
+      if (active) {
+        setCachedProducts(items);
+        setUnreadNotifications(feed.unreadCount);
+      }
     });
     return () => { active = false; };
   }, []));
@@ -49,7 +54,7 @@ const DashboardScreen = ({navigation}: any) => {
           style={styles.iconButton}
           onPress={() => navigation.navigate("Notifications")}>
           <SvgIcon name="notifications-outline" size={22} color={Colors.black} />
-          <View style={styles.notificationDot} />
+          {unreadNotifications > 0 && <View style={styles.notificationDot} />}
         </TouchableOpacity>
       </View>
 

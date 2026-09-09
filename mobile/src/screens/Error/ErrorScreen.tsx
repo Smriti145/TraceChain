@@ -1,10 +1,10 @@
 import React from "react";
 import {
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
 } from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 
 const ErrorScreen = () => {
   return (

@@ -2,12 +2,12 @@ import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  SafeAreaView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
+import {SafeAreaView} from "react-native-safe-area-context";
 import SvgIcon from "../../components/SvgIcon";
 import {Colors} from "../../theme/colors";
 

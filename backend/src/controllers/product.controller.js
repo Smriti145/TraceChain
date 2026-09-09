@@ -165,6 +165,17 @@ const createProduct = async (req, res) => {
             }));
 
             await tx.trace.createMany({data: traces});
+            await tx.notification.create({
+                data: {
+                    type: "PRODUCT_CREATED",
+                    severity: "SUCCESS",
+                    title: "Product registered",
+                    message: `${createdProduct.productName} batch ${createdProduct.batchNumber} is ready for traceability.`,
+                    metadata: {status: createdProduct.status, category: createdProduct.category},
+                    userId: req.user.id,
+                    productId: createdProduct.id,
+                },
+            });
             return createdProduct;
         });
 
