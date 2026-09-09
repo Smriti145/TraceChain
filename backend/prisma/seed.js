@@ -1,6 +1,7 @@
 require("dotenv").config();
 const bcrypt = require("bcrypt");
 const QRCode = require("qrcode");
+const crypto = require("node:crypto");
 const {PrismaClient} = require("@prisma/client");
 
 const prisma = new PrismaClient();
@@ -106,6 +107,24 @@ async function main() {
   }
 
   await prisma.notification.deleteMany({where: {userId: manufacturer.id}});
+  await prisma.scanEvent.deleteMany({where: {userId: manufacturer.id}});
+  await prisma.scanEvent.createMany({data: [
+    {
+      clientEventId: "demo-scan-ayurveda-verified", scannedValueHash: crypto.createHash("sha256").update(seededProducts[0].qrCode).digest("hex"),
+      result: "VERIFIED", isSuspicious: false, networkStatus: "ONLINE", scannedAt: new Date(Date.now() - 5 * 60 * 1000),
+      userId: manufacturer.id, productId: seededProducts[0].id, deviceId: "demo-device",
+    },
+    {
+      clientEventId: "demo-scan-food-verified", scannedValueHash: crypto.createHash("sha256").update(seededProducts[1].qrCode).digest("hex"),
+      result: "VERIFIED", isSuspicious: false, networkStatus: "ONLINE", scannedAt: new Date(Date.now() - 60 * 60 * 1000),
+      userId: manufacturer.id, productId: seededProducts[1].id, deviceId: "demo-device",
+    },
+    {
+      clientEventId: "demo-scan-invalid-flagged", scannedValueHash: crypto.createHash("sha256").update("DEMO-INVALID-CODE").digest("hex"),
+      result: "NOT_FOUND", isSuspicious: true, suspiciousReason: "INVALID_CODE", networkStatus: "ONLINE", scannedAt: new Date(Date.now() - 25 * 60 * 1000),
+      userId: manufacturer.id, deviceId: "demo-device",
+    },
+  ]});
   await prisma.notification.createMany({data: [
     {
       type: "PRODUCT_VERIFIED", severity: "SUCCESS", title: "Product verified successfully",
@@ -122,9 +141,14 @@ async function main() {
       message: `${seededProducts[2].productName} has a temperature-sensitive storage requirement.`,
       metadata: {temperature: seededProducts[2].temperature}, userId: manufacturer.id, productId: seededProducts[2].id,
     },
+    {
+      type: "SUSPICIOUS_SCAN", severity: "WARNING", title: "Suspicious scan detected",
+      message: "An unrecognized product code was recorded for security review.",
+      metadata: {reason: "INVALID_CODE"}, userId: manufacturer.id,
+    },
   ]});
 
-  console.log(`Seeded ${catalog.length} products and 3 notifications across ${new Set(catalog.map(item => item.category)).size} categories.`);
+  console.log(`Seeded ${catalog.length} products, 3 scan events and 4 notifications across ${new Set(catalog.map(item => item.category)).size} categories.`);
 }
 
 main().catch(error => {

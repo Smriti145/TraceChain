@@ -8,15 +8,16 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(cuid())
-  name      String
-  email     String    @unique
-  password  String
-  role      Role
-  createdAt DateTime  @default(now())
-  products  Product[]
-  traces    Trace[]
+  id            String         @id @default(cuid())
+  name          String
+  email         String         @unique
+  password      String
+  role          Role
+  createdAt     DateTime       @default(now())
+  products      Product[]
+  traces        Trace[]
   notifications Notification[]
+  scanEvents    ScanEvent[]
 }
 
 model Product {
@@ -71,9 +72,10 @@ model Product {
 
   // Relationships
   manufacturerId String
-  manufacturer   User    @relation(fields: [manufacturerId], references: [id])
+  manufacturer   User           @relation(fields: [manufacturerId], references: [id])
   traces         Trace[]
-  notifications Notification[]
+  notifications  Notification[]
+  scanEvents     ScanEvent[]
 
   @@index([category])
   @@index([status])
@@ -111,14 +113,14 @@ model Trace {
 }
 
 model Notification {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   type      String
-  severity  String   @default("INFO")
+  severity  String    @default("INFO")
   title     String
   message   String
   metadata  Json?
   readAt    DateTime?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
 
   userId    String
   productId String?
@@ -128,6 +130,30 @@ model Notification {
   @@index([userId, createdAt])
   @@index([userId, readAt])
   @@index([productId])
+}
+
+model ScanEvent {
+  id               String   @id @default(cuid())
+  clientEventId    String?  @unique
+  scannedValueHash String
+  result           String
+  isSuspicious     Boolean  @default(false)
+  suspiciousReason String?
+  latitude         Float?
+  longitude        Float?
+  deviceId         String?
+  networkStatus    String   @default("ONLINE")
+  scannedAt        DateTime
+  createdAt        DateTime @default(now())
+
+  userId    String
+  productId String?
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@index([userId, scannedAt])
+  @@index([productId, scannedAt])
+  @@index([isSuspicious, createdAt])
 }
 
 enum Role {
