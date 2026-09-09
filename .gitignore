@@ -16,6 +16,9 @@ mobile/android/local.properties
 # Local delivery files (share privately or attach to a GitHub Release)
 deliverables/
 
+# Local project documentation and generated guides
+docs/
+
 # React Native / iOS
 mobile/ios/Pods/
 mobile/ios/build/
