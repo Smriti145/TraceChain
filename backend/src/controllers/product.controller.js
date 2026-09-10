@@ -41,7 +41,11 @@ const createProduct = async (req, res) => {
         }
         
         const qrValue = uuidv4();
-        const publicBaseUrl = (process.env.PUBLIC_BASE_URL || `${req.protocol}://${req.get("host")}`).replace(/\/$/, "");
+        const publicBaseUrl = (
+            process.env.PUBLIC_BASE_URL
+            || process.env.RENDER_EXTERNAL_URL
+            || `${req.protocol}://${req.get("host")}`
+        ).replace(/\/$/, "");
         const verificationUrl = `${publicBaseUrl}/verify/${qrValue}`;
         const qrImage = await QRCode.toDataURL(verificationUrl);
         

@@ -25,9 +25,21 @@ test("environment config parses allowed origins and proxy setting", () => {
     assert.equal(env.TRUST_PROXY, true);
 });
 
+test("environment config permits the Render service origin", () => {
+    const env = parseEnv({
+        ...validEnv,
+        CORS_ORIGINS: "http://localhost:5001",
+        RENDER_EXTERNAL_URL: "https://tracechain-mvp.onrender.com",
+    });
+    assert.deepEqual(env.CORS_ORIGINS, [
+        "http://localhost:5001",
+        "https://tracechain-mvp.onrender.com",
+    ]);
+});
+
 test("environment config rejects weak secrets", () => {
     assert.throws(
         () => parseEnv({...validEnv, JWT_SECRET: "short"}),
-        /JWT_SECRET must contain at least 16 characters/,
+        /JWT_SECRET must contain at least 32 characters/,
     );
 });
