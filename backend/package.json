@@ -3,10 +3,14 @@
   "version": "1.0.0",
   "description": "TraceChain product provenance API and verification portal",
   "main": "src/server.js",
+  "engines": {
+    "node": ">=22 <23"
+  },
   "scripts": {
     "test": "node --test test/*.test.js",
     "check": "node --check src/server.js && node --test test/*.test.js",
     "start": "node src/server.js",
+    "start:deploy": "prisma migrate deploy && node src/server.js",
     "dev": "nodemon src/server.js",
     "seed": "node prisma/seed.js"
   },
