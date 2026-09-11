@@ -241,7 +241,10 @@ function renderQr(product) {
 
 $("#trace-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const button = event.currentTarget.querySelector("button");
+  // `Event.currentTarget` is only guaranteed while the synchronous event
+  // listener is running. Keep the form reference before awaiting the API.
+  const form = event.currentTarget;
+  const button = form.querySelector("button");
   button.disabled = true;
   $("#trace-error").textContent = "";
   try {
@@ -258,7 +261,7 @@ $("#trace-form").addEventListener("submit", async (event) => {
         remarks: value("trace-remarks") || undefined,
       }),
     });
-    event.currentTarget.reset();
+    form.reset();
     toast("Journey checkpoint recorded. The same QR now shows updated data.");
     await loadProducts();
   } catch (error) {
