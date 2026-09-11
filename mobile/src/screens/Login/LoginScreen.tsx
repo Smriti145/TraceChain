@@ -127,14 +127,14 @@ export default function LoginScreen() {
           </TouchableOpacity>
           {showConnection ? (
             <View style={styles.connectionPanel}>
-              <Text style={styles.connectionHelp}>For a physical phone, enter the deployed API URL or your laptop’s Wi-Fi IP.</Text>
+              <Text style={styles.connectionHelp}>The mentor build is connected to TraceChain Cloud. Developers may enter another HTTPS API URL here.</Text>
               <TextInput
                 value={serverUrl}
                 onChangeText={setServerUrl}
                 autoCapitalize="none"
                 autoCorrect={false}
                 keyboardType="url"
-                placeholder="http://192.168.1.10:5001/api"
+                placeholder="https://your-api.example.com/api"
                 placeholderTextColor={Colors.grayLight}
                 style={styles.serverInput}
               />
