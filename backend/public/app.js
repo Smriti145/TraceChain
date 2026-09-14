@@ -125,7 +125,62 @@ function showDashboard() {
   loginView.classList.add("hidden");
   dashboardView.classList.remove("hidden");
   applyRole(currentUser());
+  updateGoogleLinkVisibility();
   loadProducts();
+}
+
+let googleConfigured = false;
+function updateGoogleLinkVisibility() {
+  const user = currentUser();
+  $("#google-link-area").classList.toggle(
+    "hidden",
+    !googleConfigured || !user || user.email?.endsWith("@tracechain.demo")
+  );
+}
+
+async function initializeGoogleSignIn() {
+  try {
+    const {clientId} = await request("/auth/google/config");
+    if (!clientId) return;
+    const script = document.createElement("script");
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.onload = () => {
+      google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async ({credential}) => {
+          const linking = !dashboardView.classList.contains("hidden");
+          const errorElement = linking ? null : $("#login-error");
+          if (errorElement) errorElement.textContent = "";
+          try {
+            const data = await request(linking ? "/auth/google/link" : "/auth/google", {
+              method: "POST",
+              body: JSON.stringify({idToken: credential}),
+            });
+            if (linking) {
+              toast("Google account linked. You can use it next time.");
+            } else {
+              localStorage.setItem(tokenKey, data.token);
+              localStorage.setItem(userKey, JSON.stringify(data.user));
+              showDashboard();
+            }
+          } catch (error) {
+            if (errorElement) errorElement.textContent = error.message;
+            else toast(error.message);
+          }
+        },
+      });
+      google.accounts.id.renderButton($("#google-signin"), {theme: "outline", size: "large", width: 320});
+      google.accounts.id.renderButton($("#google-link-button"), {theme: "outline", size: "medium"});
+      $("#google-signin").classList.remove("hidden");
+      googleConfigured = true;
+      updateGoogleLinkVisibility();
+    };
+    script.onerror = () => { $("#login-error").textContent = "Google sign-in could not load. Use email and password for now."; };
+    document.head.appendChild(script);
+  } catch (error) {
+    console.error("Google sign-in setup failed:", error);
+  }
 }
 
 $("#demo-roles").addEventListener("click", (event) => {
@@ -355,3 +410,4 @@ $("#logout").addEventListener("click", () => {
   location.reload();
 });
 if (localStorage.getItem(tokenKey) && currentUser()) showDashboard();
+initializeGoogleSignIn();

@@ -15,7 +15,7 @@ import {useNavigation} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
 
 import InputField from "../../components/InputField";
-import {login, register} from "../../services/auth.service";
+import {login, loginWithGoogleToken, register} from "../../services/auth.service";
 import {saveApiBaseUrl, saveCurrentUser, saveToken} from "../../services/storage";
 import {DEFAULT_BASE_URL} from "../../api/axios";
 import {normalizeApiBaseUrl} from "../../api/axios";
@@ -81,6 +81,27 @@ export default function LoginScreen() {
         "Login failed",
         err.response?.data?.message || "Unable to connect to the server.",
       );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      setIsSubmitting(true);
+      const {requestGoogleIdToken} = await import("../../services/google.service");
+      const idToken = await requestGoogleIdToken();
+      if (!idToken) return;
+      const response = await loginWithGoogleToken(idToken);
+      if (response.user?.role !== "CUSTOMER") {
+        Alert.alert("Customer app only", "Use the TraceChain web portal for supply-chain roles.");
+        return;
+      }
+      await saveToken(response.token);
+      await saveCurrentUser(response.user);
+      navigation.replace("MainTabs");
+    } catch (err: any) {
+      Alert.alert("Google sign-in failed", err.response?.data?.message || err.message || "Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -165,6 +186,12 @@ export default function LoginScreen() {
             ) : null}
           </TouchableOpacity>
 
+          {Platform.OS === "android" ? (
+            <TouchableOpacity style={styles.googleButton} onPress={handleGoogleLogin} disabled={isSubmitting}>
+              <Text style={styles.googleButtonText}>Continue with Google</Text>
+            </TouchableOpacity>
+          ) : null}
+
           <View style={styles.secureRow}>
             <SvgIcon name="shield-checkmark-outline" size={16} color={Colors.success} />
             <Text style={styles.secureText}>Secure, encrypted access</Text>
@@ -177,6 +204,8 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
+  googleButton: {marginTop: 14, minHeight: 48, borderRadius: 14, borderWidth: 1, borderColor: Colors.border, backgroundColor: Colors.white, justifyContent: "center", alignItems: "center"},
+  googleButtonText: {color: Colors.black, fontSize: 15, fontWeight: "700"},
   container: {flex: 1, backgroundColor: Colors.background},
   keyboardView: {flex: 1},
   content: {flexGrow: 1, justifyContent: "center", paddingHorizontal: 28, paddingVertical: 24},

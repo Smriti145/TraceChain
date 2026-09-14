@@ -43,3 +43,8 @@ test("environment config rejects weak secrets", () => {
         /JWT_SECRET must contain at least 32 characters/,
     );
 });
+
+test("environment config accepts a Google web OAuth client ID", () => {
+    const env = parseEnv({...validEnv, GOOGLE_WEB_CLIENT_ID: "123456789-example.apps.googleusercontent.com"});
+    assert.equal(env.GOOGLE_WEB_CLIENT_ID, "123456789-example.apps.googleusercontent.com");
+});

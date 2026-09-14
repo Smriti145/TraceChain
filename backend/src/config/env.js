@@ -5,6 +5,8 @@ const envSchema = z.object({
     PORT: z.coerce.number().int().min(1).max(65535).default(5001),
     DATABASE_URL: z.string().min(1, "DATABASE_URL is required"),
     JWT_SECRET: z.string().min(32, "JWT_SECRET must contain at least 32 characters"),
+    GOOGLE_WEB_CLIENT_ID: z.preprocess(value => value === "" ? undefined : value,
+        z.string().regex(/^[0-9]+-[a-zA-Z0-9_-]+\.apps\.googleusercontent\.com$/).optional()),
     PUBLIC_BASE_URL: z.string().url().optional(),
     RENDER_EXTERNAL_URL: z.string().url().optional(),
     CORS_ORIGINS: z.string().default("http://localhost:5001"),

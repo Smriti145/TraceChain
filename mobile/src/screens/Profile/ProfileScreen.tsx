@@ -1,11 +1,12 @@
 import React, {useCallback, useState} from "react";
-import {Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
+import {Alert, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View} from "react-native";
 import {SafeAreaView} from "react-native-safe-area-context";
 import {useFocusEffect} from "@react-navigation/native";
 import SvgIcon from "../../components/SvgIcon";
 
 import {getCurrentUser, removeToken, type AppUser} from "../../services/storage";
 import {Colors} from "../../theme/colors";
+import {linkGoogleToken} from "../../services/auth.service";
 
 const menuItems = [
   {title: "Account details", icon: "person-outline"},
@@ -31,6 +32,17 @@ const ProfileScreen = ({navigation}: any) => {
         },
       },
     ]);
+  };
+  const linkGoogle = async () => {
+    try {
+      const {requestGoogleIdToken} = await import("../../services/google.service");
+      const idToken = await requestGoogleIdToken();
+      if (!idToken) return;
+      await linkGoogleToken(idToken);
+      Alert.alert("Google linked", "Next time, you can sign in with Google.");
+    } catch (err: any) {
+      Alert.alert("Could not link Google", err.response?.data?.message || err.message || "Please try again.");
+    }
   };
 
   return (
@@ -60,6 +72,12 @@ const ProfileScreen = ({navigation}: any) => {
             </TouchableOpacity>
           ))}
         </View>
+
+        {Platform.OS === "android" && user && !user.email.endsWith("@tracechain.demo") ? (
+          <TouchableOpacity style={styles.googleLinkButton} onPress={linkGoogle}>
+            <Text style={styles.googleLinkText}>Link Google account</Text>
+          </TouchableOpacity>
+        ) : null}
 
         <TouchableOpacity style={styles.logoutButton} onPress={logout}>
           <SvgIcon name="log-out-outline" size={20} color={Colors.danger} />
@@ -94,6 +112,8 @@ const styles = StyleSheet.create({
   menuIcon: {width: 34, height: 34, borderRadius: 10, backgroundColor: Colors.primarySoft, alignItems: "center", justifyContent: "center"},
   menuText: {flex: 1, marginLeft: 12, color: Colors.black, fontSize: 14, fontWeight: "600"},
   logoutButton: {height: 54, borderRadius: 15, backgroundColor: Colors.dangerSoft, flexDirection: "row", gap: 8, justifyContent: "center", alignItems: "center", marginTop: 22},
+  googleLinkButton: {height: 52, borderRadius: 15, backgroundColor: Colors.primarySoft, alignItems: "center", justifyContent: "center", marginTop: 18},
+  googleLinkText: {color: Colors.primary, fontWeight: "700", fontSize: 14},
   logoutText: {color: Colors.danger, fontWeight: "700", fontSize: 14},
   version: {textAlign: "center", color: Colors.grayLight, fontSize: 10, marginTop: 20},
 });
