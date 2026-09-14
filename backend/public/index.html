@@ -72,6 +72,7 @@
           ><button class="primary wide" type="submit">
             Enter workspace <span>→</span>
           </button>
+          <div id="google-signin" class="google-signin hidden" aria-label="Sign in with Google"></div>
           <p id="login-error" class="error" role="alert"></p>
           <p class="demo-note">
             All demo roles use <code>TraceChain@123</code>
@@ -107,6 +108,10 @@
             </p>
           </div>
           <div class="head-actions">
+            <div id="google-link-area" class="google-link-area hidden">
+              <span>Link your Google account</span>
+              <div id="google-link-button"></div>
+            </div>
             <span id="role-badge" class="role-badge">MANUFACTURER</span
             ><button id="logout" class="secondary">Sign out</button>
           </div>

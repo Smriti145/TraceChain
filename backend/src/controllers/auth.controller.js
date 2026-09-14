@@ -1,14 +1,15 @@
 const prisma = require("../config/prisma");
 const bcrypt = require("bcrypt");
 const generateToken = require("../utils/jwt");
+const {verifyGoogleToken, findOrCreateGoogleCustomer} = require("../services/google-auth.service");
 
-const publicUser = ({ password, ...user }) => user;
+const publicUser = ({ password, googleSub, ...user }) => user;
 
 const register = async (req, res) => {
 
     try {
 
-        const { name, email, password, accountType } = req.body;
+        const { name, email, password } = req.body;
 
         const exists = await prisma.user.findUnique({
             where: { email }
@@ -32,7 +33,7 @@ const register = async (req, res) => {
 
                 password: hashedPassword,
 
-                role: accountType === "BUSINESS" ? "MANUFACTURER" : "CUSTOMER",
+                role: "CUSTOMER",
 
             }
 
@@ -132,6 +133,49 @@ const me = async (req, res) => {
     }
 };
 
+const googleConfig = (_req, res) => {
+    res.json({clientId: process.env.GOOGLE_WEB_CLIENT_ID || null});
+};
+
+const googleLogin = async (req, res) => {
+    try {
+        const identity = await verifyGoogleToken(req.body.idToken);
+        const user = await findOrCreateGoogleCustomer(prisma, identity);
+        res.json({message: "Login Successful", token: generateToken(user), user: publicUser(user)});
+    } catch (error) {
+        if (error.status) return res.status(error.status).json({message: error.message});
+        if (error.code === "P2002") return res.status(409).json({message: "Account already exists. Please retry sign-in."});
+        console.error("Google login failed:", error.message);
+        res.status(401).json({message: "Unable to verify Google sign-in"});
+    }
+};
+
+const linkGoogle = async (req, res) => {
+    try {
+        const identity = await verifyGoogleToken(req.body.idToken);
+        const user = await prisma.user.findUnique({where: {id: req.user.id}});
+        if (!user) return res.status(401).json({message: "Account not found"});
+        // Shared demo passwords are not proof of ownership of a real person.
+        if (user.email.endsWith("@tracechain.demo")) {
+            return res.status(403).json({message: "Demo accounts cannot link a personal Google account"});
+        }
+        if (user.googleSub && user.googleSub !== identity.googleSub) {
+            return res.status(409).json({message: "A different Google account is already linked"});
+        }
+        const owner = await prisma.user.findUnique({where: {googleSub: identity.googleSub}});
+        if (owner && owner.id !== user.id) {
+            return res.status(409).json({message: "Google account is already linked elsewhere"});
+        }
+        await prisma.user.update({where: {id: user.id}, data: {googleSub: identity.googleSub}});
+        res.json({message: "Google account linked"});
+    } catch (error) {
+        if (error.status) return res.status(error.status).json({message: error.message});
+        if (error.code === "P2002") return res.status(409).json({message: "Google account is already linked elsewhere"});
+        console.error("Google link failed:", error.message);
+        res.status(401).json({message: "Unable to verify Google sign-in"});
+    }
+};
+
 module.exports = {
 
     register,
@@ -139,5 +183,8 @@ module.exports = {
     login,
 
     me,
+    googleConfig,
+    googleLogin,
+    linkGoogle,
 
 };

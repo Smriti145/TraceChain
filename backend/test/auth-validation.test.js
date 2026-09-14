@@ -30,13 +30,13 @@ test("login accepts an existing demo-length password", () => {
     assert.equal(result.success, true);
 });
 
-test("registration supports customer and business accounts without accepting privileged roles", () => {
-    const business = registerSchema.parse({
+test("public registration cannot self-assign a privileged business role", () => {
+    const business = {
         name: "Acme Traceability",
         email: "owner@acme.example",
         password: "a-secure-password",
         accountType: "BUSINESS",
-    });
-    assert.equal(business.accountType, "BUSINESS");
-    assert.equal(registerSchema.safeParse({...business, role: "MANUFACTURER"}).success, false);
+    };
+    assert.equal(registerSchema.safeParse(business).success, false);
+    assert.equal(registerSchema.safeParse({...business, accountType: "CUSTOMER", role: "MANUFACTURER"}).success, false);
 });

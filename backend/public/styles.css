@@ -145,6 +145,8 @@ h2 {
 .login-card > .muted {
   margin: 0 0 20px;
 }
+.google-signin { display: flex; justify-content: center; margin: 18px 0 6px; }
+.google-link-area { display: flex; align-items: center; gap: 12px; font-size: 12px; color: var(--ink); }
 .role-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
