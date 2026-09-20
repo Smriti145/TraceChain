@@ -31,14 +31,14 @@ const ProductDetailsScreen = ({navigation, route}: any) => {
         ) : null}
         <View style={styles.hero}>
           <View style={styles.verifiedIcon}><SvgIcon name="shield-checkmark" size={38} color={Colors.success} /></View>
-          <Text style={styles.eyebrow}>{String(product.category || "GENERAL PRODUCT").toUpperCase()}</Text>
+          <Text style={styles.eyebrow}>{String(product.category || "FOOD & SPICES").toUpperCase()}</Text>
           <Text style={styles.title}>{product.productName}</Text>
           <Text style={styles.subtitle}>Batch {product.batchNumber}</Text>
           <View style={styles.badge}><View style={styles.dot} /><Text style={styles.badgeText}>Verified by TraceChain</Text></View>
         </View>
         <Text style={styles.sectionLabel}>PRODUCT DETAILS</Text>
         <View style={styles.infoContainer}>
-          <InfoRow label="Category" value={String(product.category || "General").replaceAll("_", " ")} />
+          <InfoRow label="Category" value={String(product.category || "Food & Spices").replaceAll("_", " ")} />
           <InfoRow label="Brand" value={product.brand} />
           <InfoRow label="Variant / model" value={product.variant} />
           <InfoRow label="Product code / SKU" value={product.productCode} />

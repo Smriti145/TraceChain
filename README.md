@@ -11,7 +11,8 @@ TraceChain is a product provenance system with a manufacturer web portal, an Exp
 - Product authenticity details and journey timeline
 - Role-based API access with JWT authentication
 - PostgreSQL storage through Prisma
-- Multi-category demo dataset covering food, wellness, pharmaceuticals, textiles, electronics, and cosmetics
+- Food & Spices-only catalog: Food & Beverage and Spices & Seasonings
+- Non-food legacy records remain stored for audit retention but are excluded from active product lookup and creation
 
 ## Run locally
 

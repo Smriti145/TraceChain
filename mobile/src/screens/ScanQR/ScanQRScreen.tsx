@@ -49,7 +49,7 @@ const ScanQRScreen = ({ navigation }: any) => {
       const lookupValue = extractLookupValue(value);
       const cached = !error.response ? await getCachedProduct(lookupValue) : null;
 
-      if (cached) {
+      if (cached && ["Food & Beverage", "Spices & Seasonings"].includes(cached.product.category)) {
         await saveOfflineScan(lookupValue, cached.product);
         navigation.navigate("ProductDetails", {
           product: cached.product,
@@ -60,7 +60,7 @@ const ScanQRScreen = ({ navigation }: any) => {
         Alert.alert(
           error.response ? "Product not verified" : "No offline record",
           error.response?.data?.message ||
-            "The server is unavailable and this product has not been saved on this phone yet.",
+            "No supported food or spice record is available offline. Connect to the server and try again.",
         );
       }
     } finally {
@@ -168,7 +168,7 @@ const ScanQRScreen = ({ navigation }: any) => {
           </View>
 
           <Text style={styles.instruction}>
-            Scan a QR or barcode from any supported product category
+            Scan a QR or barcode on a food or spice product
           </Text>
         </View>
 

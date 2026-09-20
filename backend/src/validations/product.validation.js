@@ -1,4 +1,5 @@
 const {z} = require("zod");
+const {PRODUCT_CATEGORIES} = require("../config/product-scope");
 
 const optionalText = max => z.string().trim().max(max).optional();
 const optionalDate = z.union([z.string().date(), z.literal("")]).optional();
@@ -6,7 +7,7 @@ const optionalNumber = z.union([z.coerce.number().finite(), z.literal("")]).opti
 
 const createProductSchema = z.object({
     productName: z.string().trim().min(2).max(160),
-    category: z.string().trim().min(2).max(80).default("GENERAL"),
+    category: z.enum(PRODUCT_CATEGORIES).default("Food & Beverage"),
     brand: optionalText(100),
     variant: optionalText(100),
     productCode: optionalText(100),
