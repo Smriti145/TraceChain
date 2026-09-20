@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width,initial-scale=1" />
     <meta
       name="description"
-      content="TraceChain multi-industry QR traceability portal"
+      content="TraceChain food and spices QR traceability portal"
     />
     <title>TraceChain | Operations Portal</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -23,7 +23,7 @@
           ><span class="brand-mark">⌁</span>TRACECHAIN</a
         >
         <div>
-          <p class="eyebrow mint">MULTI-INDUSTRY TRACEABILITY</p>
+          <p class="eyebrow mint">FOOD &amp; SPICES TRACEABILITY</p>
           <h1>Every product.<br />One trusted history.</h1>
           <p>
             Register products, generate secure QR identities and follow every
@@ -104,7 +104,7 @@
             <p class="eyebrow">OPERATIONS CONTROL CENTRE</p>
             <h1>Product traceability</h1>
             <p class="muted">
-              Create, identify and monitor products across industries.
+              Create, identify and monitor food and spice batches from source to shelf.
             </p>
           </div>
           <div class="head-actions">
@@ -215,34 +215,22 @@
                 <label
                   >Product name *<input
                     id="product-name"
-                    placeholder="Smart sensor, Herbal oil"
+                    placeholder="Turmeric powder, Mustard oil"
                     required
                     minlength="2" /></label
                 ><label
-                  >Industry / category *<input
-                    id="category"
-                    list="product-categories"
-                    placeholder="Select or enter industry"
-                    required /></label
-                ><datalist id="product-categories">
-                  <option>Food & Beverage</option>
-                  <option>Pharmaceutical</option>
-                  <option>Ayurveda & Wellness</option>
-                  <option>Cosmetics</option>
-                  <option>Textile & Apparel</option>
-                  <option>Electronics</option>
-                  <option>Automotive</option>
-                  <option>Industrial Goods</option>
-                  <option>Agriculture</option>
-                  <option>General</option></datalist
+                  >Food / spice category *<select id="category" required>
+                  <option value="Food &amp; Beverage">Food &amp; Beverage</option>
+                  <option value="Spices &amp; Seasonings">Spices &amp; Seasonings</option>
+                </select></label
                 ><label
                   >Brand / organisation<input
                     id="brand"
                     placeholder="Brand or company" /></label
                 ><label
-                  >Variant / model<input
+                  >Variant / grade<input
                     id="variant"
-                    placeholder="Model, grade, size" /></label
+                    placeholder="Whole, ground, grade, pack size" /></label
                 ><label
                   >Product ID / SKU<input
                     id="product-code"
@@ -369,7 +357,7 @@
               <input
                 id="inventory-search"
                 type="search"
-                placeholder="Search product, batch or industry"
+                placeholder="Search food, spice or batch"
               /><span id="product-count" class="count">0 products</span>
             </div>
           </div>

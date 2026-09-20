@@ -26,7 +26,7 @@ model Product {
 
   // Basic product information
   productName     String
-  category        String    @default("GENERAL")
+  category        String    @default("Food & Beverage")
   brand           String?
   variant         String?
   productCode     String?   @unique

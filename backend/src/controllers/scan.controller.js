@@ -1,5 +1,6 @@
 const crypto = require("node:crypto");
 const prisma = require("../config/prisma");
+const {productScope} = require("../config/product-scope");
 const {assessScanRisk, RAPID_SCAN_WINDOW_MS} = require("../services/scan-risk.service");
 
 const parseLimit = value => {
@@ -21,7 +22,7 @@ const normalizeScanValue = value => {
 const hashScanValue = value => crypto.createHash("sha256").update(value).digest("hex");
 
 const findProduct = value => prisma.product.findFirst({
-    where: {OR: [{qrCode: value}, {barcode: value}, {productCode: value}, {batchNumber: value}]},
+    where: {...productScope(), OR: [{qrCode: value}, {barcode: value}, {productCode: value}, {batchNumber: value}]},
     include: productInclude,
 });
 
@@ -49,7 +50,8 @@ const recordScan = async ({userId, input}) => {
             include: {product: {include: productInclude}},
         });
         if (existing && existing.userId === userId) {
-            return {scanEvent: existing, product: existing.product, duplicate: true};
+            const supported = existing.product && productScope().category.in.includes(existing.product.category);
+            return {scanEvent: existing, product: supported ? existing.product : null, duplicate: true};
         }
     }
 

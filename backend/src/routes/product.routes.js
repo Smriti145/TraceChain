@@ -31,7 +31,7 @@ router.get("/verify/:qr", verifyProduct);
 
 router.get("/:id", protect, getProduct);
 
-router.put("/:id", protect, authorize("MANUFACTURER"),updateProduct);
+router.put("/:id", protect, authorize("MANUFACTURER"), validate(createProductSchema.partial()), updateProduct);
 
 router.delete("/:id", protect, authorize("MANUFACTURER"),deleteProduct);
 

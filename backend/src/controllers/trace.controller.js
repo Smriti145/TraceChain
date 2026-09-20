@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const {productScope} = require("../config/product-scope");
 
 const roleStages = Object.freeze({
   MANUFACTURER: ["MANUFACTURED", "QUALITY_CHECK", "PACKAGED"],
@@ -18,7 +19,7 @@ const addTrace = async (req, res) => {
     }
 
     const trace = await prisma.$transaction(async tx => {
-      const product = await tx.product.findUnique({where: {id: productId}, select: {id: true, productName: true, batchNumber: true, manufacturerId: true}});
+      const product = await tx.product.findUnique({where: {id: productId, ...productScope()}, select: {id: true, productName: true, batchNumber: true, manufacturerId: true}});
       if (!product) { const error = new Error("Product not found"); error.status = 404; throw error; }
       const createdTrace = await tx.trace.create({
         data: {productId, stage, location, latitude, longitude, temperature, remarks, eventDate: new Date(), updatedById: req.user.id},
@@ -42,7 +43,7 @@ const addTrace = async (req, res) => {
 const getTimeline = async (req, res) => {
   try {
     const timeline = await prisma.trace.findMany({
-      where: {productId: req.params.id},
+      where: {productId: req.params.id, product: productScope()},
       include: {updatedBy: {select: {id: true, name: true, email: true, role: true}}},
       orderBy: [{eventDate: "asc"}, {createdAt: "asc"}],
     });

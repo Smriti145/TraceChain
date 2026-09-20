@@ -16,7 +16,7 @@ import {loadScanHistory} from "../../services/scan.service";
 
 import {Colors} from "../../theme/colors";
 
-const categories = ["All", "Ayurveda", "Food", "Pharma", "Textile", "Electronics", "Cosmetics"];
+const categories = ["Food & Beverage", "Spices & Seasonings"];
 
 const DashboardScreen = ({navigation}: any) => {
   const [scanEvents, setScanEvents] = useState<ScanEvent[]>([]);
@@ -55,7 +55,7 @@ const DashboardScreen = ({navigation}: any) => {
         <View>
           <Text style={styles.eyebrow}>{today}</Text>
           <Text style={styles.greeting}>Hello, {currentUser?.name?.split(" ")[0] || "there"}</Text>
-          <Text style={styles.subHeading}>{role} · One platform, every product journey.</Text>
+          <Text style={styles.subHeading}>{role} · From source to shelf.</Text>
         </View>
         <TouchableOpacity
           style={styles.iconButton}
@@ -90,7 +90,7 @@ const DashboardScreen = ({navigation}: any) => {
         <SvgIcon name="arrow-forward-circle" size={30} color="rgba(255,255,255,0.9)" />
       </TouchableOpacity>
 
-      <Text style={styles.sectionKicker}>TRACE ACROSS INDUSTRIES</Text>
+      <Text style={styles.sectionKicker}>FOOD & SPICES TRACEABILITY</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.categories}>
         {categories.map((category, index) => (
           <View key={category} style={[styles.categoryChip, index === 0 && styles.categoryChipActive]}>

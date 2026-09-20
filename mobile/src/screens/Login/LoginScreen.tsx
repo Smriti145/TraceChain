@@ -119,7 +119,7 @@ export default function LoginScreen() {
           <Text style={styles.brand}>TRACECHAIN</Text>
           <Text style={styles.title}>{mode === "LOGIN" ? "Welcome to TraceChain." : "Create your workspace."}</Text>
           <Text style={styles.subtitle}>
-            Scan and verify the real journey of products across every industry.
+            Scan food and spices to explore their recorded source-to-shelf journey.
           </Text>
           <View style={styles.modeSwitch}>
             <TouchableOpacity style={[styles.modeButton, mode === "LOGIN" && styles.modeButtonActive]} onPress={() => setMode("LOGIN")}><Text style={[styles.modeText, mode === "LOGIN" && styles.modeTextActive]}>Sign in</Text></TouchableOpacity>

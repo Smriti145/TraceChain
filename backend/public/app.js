@@ -273,7 +273,7 @@ function renderQr(product) {
     product.batchNumber
   )}</span><h2>${escapeHtml(
     product.productName
-  )}</h2><div class="qr-details"><span>INDUSTRY<strong>${escapeHtml(
+  )}</h2><div class="qr-details"><span>CATEGORY<strong>${escapeHtml(
     product.category
   )}</strong></span><span>STATUS<strong>${escapeHtml(
     product.status
@@ -343,7 +343,7 @@ function renderProducts(products) {
           `<article class="product"><div class="product-top"><div class="product-icon">${cubeSvg}</div><span class="status">${escapeHtml(
             product.status
           )}</span></div><p class="eyebrow">${escapeHtml(
-            product.category || "GENERAL"
+            product.category || "Food & Beverage"
           )}</p><h3>${escapeHtml(product.productName)}</h3><p>${escapeHtml(
             product.batchNumber
           )}</p><footer><span>${escapeHtml(

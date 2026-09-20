@@ -1,4 +1,5 @@
 const prisma = require("../config/prisma");
+const {productScope} = require("../config/product-scope");
 const { v4: uuidv4 } = require("uuid");
 const QRCode = require("qrcode");
 
@@ -85,7 +86,7 @@ const createProduct = async (req, res) => {
             const createdProduct = await tx.product.create({
                 data: {
                     productName: productName.trim(),
-                    category: category?.trim() || "GENERAL",
+                    category: category?.trim() || "Food & Beverage",
                     brand: brand?.trim() || null,
                     variant: variant?.trim() || null,
                     productCode: productCode?.trim() || null,
@@ -208,7 +209,7 @@ const getProducts = async (req, res) => {
 
         const products = await prisma.product.findMany({
 
-            where: req.user.role === "MANUFACTURER" ? {manufacturerId: req.user.id} : undefined,
+            where: {...productScope(), ...(req.user.role === "MANUFACTURER" ? {manufacturerId: req.user.id} : {})},
 
             include: {
                 manufacturer: {
@@ -241,6 +242,7 @@ const getProduct = async (req, res) => {
             where: {
 
                 id: req.params.id,
+                ...productScope(),
 
             },
 
@@ -286,7 +288,7 @@ const updateProduct = async (req, res) => {
 
     try {
 
-        const ownedProduct = await prisma.product.findFirst({where: {id: req.params.id, manufacturerId: req.user.id}});
+        const ownedProduct = await prisma.product.findFirst({where: {id: req.params.id, manufacturerId: req.user.id, ...productScope()}});
         if (!ownedProduct) return res.status(404).json({message: "Product not found in your workspace"});
 
         const product = await prisma.product.update({
@@ -358,6 +360,7 @@ const deleteProduct = async (req, res) => {
 
         const product = await prisma.product.findFirst({
             where: {
+                ...productScope(),
                 OR: [
                     {qrCode: qr},
                     {barcode: qr},
