@@ -42,3 +42,10 @@ mobile/ios/.xcode.env.local
 # OS
 .DS_Store
 **/vendor/bundle/
+
+/GOOGLE_SIGN_IN_SETUP.md
+/FOOD_SPICES_ROLLOUT.md
+/docs/
+/Docs/
+/deliverables/
+/mobile/deliverables/
